@@ -1,0 +1,19 @@
+/*!
+ *   TECH STC v2.3.8
+ *   Author: TECH STC
+ *	 Website: TECH STC <https://www.techstc.com>
+ *   License: Open source
+!*/
+/*
+ * Core: General Layout Style
+ * -------------------------
+ */
+ 
+ .btn-none{ background:none;}
+ .hide-this{ display:none!important;}
+ .inputfile{ width: .1px; height: .1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1;}
+ .cat-list .label{ margin-right: 3px;}
+ .login-logo img{ max-width: 200px; max-height: 200px;}
+ .overflow-h-200{ max-width:200px; overflow:hidden;}
+ .category-list>.box-header{max-height: 250px; overflow-y: scroll;}
+ .m-r-5{margin-right: 5px;}

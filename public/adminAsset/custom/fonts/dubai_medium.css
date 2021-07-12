@@ -1,0 +1,27 @@
+/*default version*/
+@font-face {
+	font-family: 'dubaiMedium';
+	src: url('dubai_medium.ttf'); 
+}
+@import url("//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css");
+/*h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 , span, p, a, table, label, b, strong, ol, ul, li{font-family: dubaiMedium !important}*/
+* :not(i,.sidebar-toggle){font-family: dubaiMedium !important}
+
+
+.bootstrap-datetimepicker-widget .timepicker-picker span,
+.bootstrap-datetimepicker-widget .timepicker-hours span,
+.bootstrap-datetimepicker-widget .timepicker-minutes span {
+    font-family: 'Glyphicons Halflings' !important
+}
+
+
+
+div.dataTables_wrapper div.dataTables_paginate {
+    text-align: left !important;
+}
+div.dataTables_length {
+    float: right !important;
+}
+div.dataTables_wrapper div.dataTables_filter {
+    text-align: left !important;
+}

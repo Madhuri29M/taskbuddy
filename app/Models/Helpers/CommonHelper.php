@@ -8,8 +8,10 @@ use Redirect;
 use App\Models\User;
 use App\Models\Setting;
 use App\Models\DeviceDetail;
+use App\Models\TaskHistory;
 use App\Models\Country;
 use App\Models\Notifications;
+use App\Models\SmsVerification;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Carbon\Carbon;
@@ -30,8 +32,8 @@ trait CommonHelper
   //Genrate OTP
   public function genrateOtp(){
 
-    $code = mt_rand(1000,9999);
-    // $code = 1234;
+    // $code = mt_rand(1000,9999);
+    $code = 1234;
     return $code;
   }
   
@@ -47,29 +49,13 @@ trait CommonHelper
       $filenameWithExt =  $media->getClientOriginalName();
       $filename        = pathinfo($filenameWithExt, PATHINFO_FILENAME);
       $extension       =  $media->getClientOriginalExtension();
-      $fileNameToStore = str_replace(' ','_',$filename).'_'.time().'.'.$extension;
-
-      if($type == 'advertisement_image' || $type == 'advertisement_video')
-      {
-        $fileNameToStore = 'advertisement_'.time().'.'.$extension;
-      }
+      $fileNameToStore = uniqid().'_'.time().'.'.$extension;
 
       $save =  $media->move('media',$fileNameToStore);
       $path =  $this->image_path.$fileNameToStore;
       
       return $path;
 
-      //S3 Bucket Image Saving
-      // DB::beginTransaction();
-      // try{
-      //     $path = Storage::disk('s3')->put('images/originals', $file,'public');
-      //     DB::commit();
-      //     return $path;
-      // }catch(\Exception $e){
-      //     DB::rollback();
-      //     $path = '';
-      //     return $path;
-      // }   
   }
 
   /**
@@ -94,7 +80,7 @@ trait CommonHelper
   /**
   * Send Notification
   */
-  public function sendNotification($user,$title,$body,$slug){
+  public function sendNotification($user,$title,$body,$slug,$buddy_id){
       
       if($user == null){
         return true;
@@ -106,8 +92,7 @@ trait CommonHelper
       $notify->title    = $title;
       $notify->content  = $body;
       $notify->slug     = $slug;
-     
-    
+      $notify->buddy_id = $buddy_id;
       $notify->save();
 
       //Check for user's device details
@@ -141,5 +126,100 @@ trait CommonHelper
 
       return true;
   }
+    //Update Task History
+    public function update_task_history($task_id,$status,$user_id){
+        $task_history = new TaskHistory;
+        $task_history->task_id = $task_id;
+        $task_history->status = $status;
+        $task_history->updated_by = $user_id;
+        $res = $task_history->save();
+        if($res)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    //Send OTP
+    public function sendOtp($country_code,$mobile_number,$otp,$sms=''){
+        DB::beginTransaction();
+        try{
+            //Delete Old OTP Entries to prevent DB table data flooding
+            $exists = SmsVerification::where('mobile_number',$mobile_number)->where('status','!=','pending')->get();
+            if($exists->count() > 0){
+                foreach ($exists as $exist) {
+                    if($sms){
+                        if($exist->id != $sms->id){
+                            $exist->delete();
+                        }
+                    }
+                }
+            }
+            //Add Data into table
+            if($sms == ''){
+              $sms                = new SmsVerification();
+              $sms->mobile_number = $mobile_number;
+            }
+            $sms->code       = $otp;
+            $sms->status     = 'pending';
+            $sms->created_at = Carbon::now();
+            $sms->save();
+
+            //By-pass SMS Verification
+            // DB::commit();
+            // return true;
+
+            //temp remove once testing done
+            // $otp = mt_rand(1000,9999);
+            //send sms api
+            DB::commit();
+            $response = 1;
+            if($response == 1){
+              return true;
+            } else {
+              return false;
+            }
+        } catch (\Exception|\GuzzleException $e){ 
+            DB::rollback();
+            return false;
+        }
+    }
+
+    /**
+     * Save images from external URL
+     *
+     * @param  file  $image
+     *
+     * @return image model
+    */
+    public function saveImageFromUrl($url, $featured = null)
+    {
+        // Get file info and validate
+        $file_headers = get_headers($url, TRUE);
+        $pathinfo = pathinfo($url);
+        // $size = getimagesize($url);
+
+        if ($file_headers === false) return; // when server not found
+
+        $extension = 'jpg';
+
+        // Get the original file
+        // echo "<pre>";print_r($url);exit;
+        $file_content = file_get_contents($url);
+        // Make path and upload
+        if (!is_dir('uploads/profile_images/')) // Make the directory if not exist
+        {
+            mkdir('uploads/profile_images/', 0777, true);
+        }
+        $path = 'uploads/profile_images/' . uniqid() . '.' . $extension;
+        // echo "<pre>";print_r($path);exit;
+        $res = file_put_contents(public_path($path), $file_content);
+        return $path;
+    }
+  
+  
 
 }

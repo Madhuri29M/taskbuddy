@@ -128,13 +128,5 @@ return [
     'term_conditon_apply'    => 'Term & Condition Apply',  
     'all_r' => 'All',  
     'filter'    => 'Filter',
-    'vendor_not_approved' => 'Your profile is under review at the momment, you will access it once Administrator approves your profile',
-    'vendor_not_active' => 'Your profile is Inactive.Please contact Administrator.',
-    'km_away'   => 'Km Away',
-    'please_upload_150x150_size_image'   => '(For best result please upload 150x150 size image)',
-    'please_upload_300x300_size_image'   => '(For best result please upload 300x300 size image)',
-    'please_upload_80x80_size_image'   => '(For best result please upload 80x80 size image)',
-    'hours' => 'Hours',
-    'minutes'  => 'Minutes',
-    'profile_rejected' => 'Your profile is Rejected.Please contact Administrator.',
+    'dashboard_data' => 'Dashboard Data'
 ];

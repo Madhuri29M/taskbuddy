@@ -37,19 +37,20 @@ class UsersTableSeeder extends Seeder
         for ($i=0; $i <= 1; $i++) {
                 if($i == 0){
                     $role = Role::where('name','developer')->first();
+                    $email = 'developer@mail.com';
+                    $password = '12345678';
                     $phone = '1234567890';
                 }else if($i == 1){
                     $role = Role::where('name','admin')->first();
+                    $email = 'administrator@user.com';
+                    $password = 'admin@123';
                     $phone = '4569078123';
-                }else if($i == 2){
-                    $role = Role::where('name','vendor')->first();
-                    $phone = '0987654321';
                 }
                 $user = User::firstOrCreate([
                             'first_name' => $role->name,
-                            'email' => strtolower($role->name).'@mail.com',
+                            'email' => $email,
                             'mobile_number' => $phone,
-                            'password' => Hash::make('12345678'),
+                            'password' => Hash::make($password),
                             'user_type' => $role->name,
                             'verified' => 1,
                             'registered_on' => 'web',
@@ -60,8 +61,8 @@ class UsersTableSeeder extends Seeder
 
                 //if($role->name != 'developer'){
                 $this->command->getOutput()->writeln("<question>".strtoupper($role->name)." Panel Credentials</question>");
-                $this->command->getOutput()->writeln("<comment>Username:</comment><info>".strtolower($role->name).'@mail.com'."</info>");
-                $this->command->getOutput()->writeln("<comment>Password:</comment><info>12345678</info>");
+                $this->command->getOutput()->writeln("<comment>Username:</comment><info>".$email."</info>");
+                $this->command->getOutput()->writeln("<comment>Password:</comment><info>$password</info>");
                 //}
         }
         //factory('App\Models\User', 10)->create();

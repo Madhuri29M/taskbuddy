@@ -34,7 +34,7 @@ class AuthController extends BaseController
             'company_name'   => 'required|string|min:3|max:50',
             'mobile_number'  => 'required|digits:10|unique:users',
             'country_id'     => 'required|exists:countries,id',
-            'firebase_token' => 'required|unique:users',
+            // 'firebase_token' => 'required|unique:users',
             'device_token'   => 'required',
             'device_type'    => 'required',
         ]);
@@ -57,7 +57,6 @@ class AuthController extends BaseController
         $user->mobile_number  = $request->mobile_number;
         $user->password       = bcrypt(12345678);
         $user->country_id     = $request->country_id;
-        $user->firebase_token = $request->firebase_token;
         $user->user_type      = 'customer';
         $user->status         = 'active';
 
@@ -66,8 +65,10 @@ class AuthController extends BaseController
         try {
 
             if($user->save()){ // Check if user data is saved
+
+
                 // Save Device Details
-                $data = $request->except('full_name','company_name','mobile_number','country_id','designation','firebase_token');
+                $data = $request->except('full_name','company_name','mobile_number','country_id','designation');
                 $createArray = array();
                 
                 foreach ($data as $key => $value) {
@@ -81,10 +82,23 @@ class AuthController extends BaseController
                     $createArray['user_id'] = $user->id;
                     DeviceDetail::create($createArray);
                 }
+
+                $otp = $this->genrateOtp();
+                $country_code = $user->country->country_code;
+                $mobile_number = $request->mobile_number;
+                $res = $this->sendOtp($country_code,$mobile_number,$otp);
+
                 DB::commit();
-                //send welcome email to customer
-                $user->accessToken = $user->createToken(config('app.name'))->accessToken;
-                return $this->sendResponse(new UserResource($user), trans('auth.registered_successfully'));
+                if($res)
+                {
+                    //send welcome email to customer
+                    return $this->sendResponse(new UserResource($user), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
+                }
+                else{
+                    return $this->sendError('',trans('auth.otp_sent_error'));
+                }
+                /*$user->accessToken = $user->createToken(config('app.name'))->accessToken;
+                return $this->sendResponse(new UserResource($user), trans('auth.registered_successfully'));*/
                 
                
             }else{
@@ -92,8 +106,8 @@ class AuthController extends BaseController
                 return $this->sendError('',trans('auth.error'));
             }
         } catch (Exception $e) {
-          DB::rollback();
-          return $this->sendError('',trans('common.something_went_wrong'));
+            DB::rollback();
+            return $this->sendError('',trans('common.something_went_wrong'));
         }   
     }
 
@@ -108,7 +122,7 @@ class AuthController extends BaseController
             'country_id'    => 'required|exists:countries,id',
             'device_token'  => 'nullable',
             'device_type'   => 'nullable',
-            'firebase_token' => 'required|exists:users',
+            // 'firebase_token' => 'required|exists:users',
         ]);
         if($validator->fails()) {
             return $this->sendError($this->object, $validator->errors()->first());       
@@ -119,15 +133,25 @@ class AuthController extends BaseController
         if(!$user){
             return $this->sendError($this->object,trans('auth.user_not_valid'));
         }
-        if($user->firebase_token != $request->firebase_token)
+        /*if($user->firebase_token != $request->firebase_token)
         {
             return $this->sendError($this->object,trans('auth.firebase_token_not_valid'));
-        }
+        }*/
 
         if($user->status == 'blocked' || $user->status == 'inactive'){
             $admin_email = Setting::get('contact_email');
             return $this->sendError($this->object,trans('auth.account_blocked',['contact' => $admin_email]));
         }
+
+        $smsVerifcation = SmsVerification::where(['mobile_number' => $request->mobile_number])
+                    ->latest() //show the latest if there are multiple
+                    ->first();
+        //send & store otp
+        $otp = $this->genrateOtp();
+        $country_code = $user->country->country_code;
+        $mobile_number = $request->mobile_number;
+        $res = $this->sendOtp($country_code,$mobile_number,$otp,$smsVerifcation);
+
         // Save Device Details
         $data = $request->except('mobile_number','country_id');
         $createArray = array();
@@ -142,8 +166,16 @@ class AuthController extends BaseController
             $createArray['user_id'] = $user->id;
             DeviceDetail::create($createArray);
         }
-        $user->accessToken = $user->createToken(config('app.name'))->accessToken;
-        return $this->sendResponse(new UserResource($user), trans('auth.login_success'));
+
+        if($res) {
+            return $this->sendResponse(new UserResource($user), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
+        }
+        else
+        {
+            return $this->sendError('',trans('auth.otp_sent_error'));
+        }
+        // $user->accessToken = $user->createToken(config('app.name'))->accessToken;
+        // return $this->sendResponse(new UserResource($user), trans('auth.login_success'));
 
     }
 
@@ -158,10 +190,10 @@ class AuthController extends BaseController
         try{
             $customer = User::where('social_id', $request->social_id)->first();
 
-            $mobile_rules = 'nullable|digits:9|unique:users';
+            $mobile_rules = 'nullable|digits:10|unique:users';
             $email_rules = 'nullable|email|unique:users';
             if($customer){
-                $mobile_rules = 'nullable|unique:users,mobile_number,'.$customer->id.',id,user_type,customer|digits:9';
+                $mobile_rules = 'nullable|unique:users,mobile_number,'.$customer->id.',id,user_type,customer|digits:10';
                 $email_rules = 'nullable|email|unique:users,email,'.$customer->id;
             }
             $validator = Validator::make($request->all(),[
@@ -181,7 +213,9 @@ class AuthController extends BaseController
               return $this->sendValidationError('',$validator->errors()->first());
             }
             if ( ! $customer ){
-               
+                if(!$request->mobile_number){
+                    return $this->sendResponse('', trans('auth.account_not_exist_mobile_required'), '404');
+                }
                 $customer                = new User;
                 $customer->mobile_number = $request->mobile_number;
                 $customer->first_name    = $request->name ? $request->name : NULL;
@@ -192,12 +226,24 @@ class AuthController extends BaseController
                 $customer->status        = 'active';
                 $customer->user_type     = 'customer';
                 $customer->social_type   = 'social';
-                /*if($request->image_url)
+                if($request->image_url)
                 {
                     $path = $this->saveImageFromUrl($request->image_url);
                     $customer->profile_image = $path;
-                }*/
+                }
                 $customer->save();
+
+                //send and store otp
+                $otp = $this->genrateOtp();
+                $country_code = $customer->country->country_code;
+                $mobile_number = $request->mobile_number;
+                $res = $this->sendOtp($country_code,$mobile_number,$otp);
+
+                if($res) {
+                    return $this->sendResponse(new UserResource($customer), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
+                } else {
+                    return $this->sendError('',trans('auth.otp_sent_error'));
+                }
 
             } else {
                 if($customer->first_name == ''){
@@ -213,6 +259,28 @@ class AuthController extends BaseController
                     }
                 }
                 $customer->save();
+                if($customer->verified != '1'){
+                    if(!$request->mobile_number){
+                        return $this->sendResponse('', trans('auth.account_exist_mobile_required'), '404');
+                    }
+
+                    $customer->mobile_number = $request->mobile_number;
+                    $customer->country_id = $request->country_id;
+                    $customer->save();
+
+                    //send and store otp
+                    $otp = $this->genrateOtp();
+                    $country_code = $customer->country->country_code;
+                    $mobile_number = $request->mobile_number;
+                    $res = $this->sendOtp($country_code,$mobile_number,$otp);
+                    
+                    if($res) {
+                        return $this->sendResponse(new UserResource($customer), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
+                    }
+                    else{
+                        return $this->sendError('',trans('auth.otp_sent_error'));
+                    }
+                }
             }
             
 
@@ -279,6 +347,142 @@ class AuthController extends BaseController
         }else{
 
             return $this->sendError('',trans('auth.error'));
+        }
+    }
+
+    /**
+     * Verify OTP
+     * @return \Illuminate\Http\Response
+     */
+    public function verify_otp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id'       => 'required|exists:users,id',
+            'mobile_number' => 'required|digits:10',
+            'country_id'    => 'required|exists:countries,id',
+            'otp'           => 'required|min:4|max:4'
+        ]);
+
+        if($validator->fails()) {
+            return $this->sendError($this->object, $validator->errors()->first());       
+        }
+
+        $user = User::find($request->user_id);
+
+        $smsVerifcation = SmsVerification::where(['mobile_number' => $request->mobile_number,'status' => 'pending'])
+                        ->latest() //show the latest if there are multiple
+                        ->first();
+
+        if($smsVerifcation == null){
+            return $this->sendError($this->object,trans('auth.number_not_found'));
+        }
+
+        if($user->country_id != $request->country_id){
+            return $this->sendError('', trans('auth.otp_wrong_number'));
+        }
+
+        if($user->mobile_number != $request->mobile_number){
+            return $this->sendError('', trans('auth.otp_wrong_number'));
+        }
+
+        if($request->otp != $smsVerifcation->code){
+            return $this->sendError($this->object,trans('auth.otp_invalid_long'));
+        }
+
+
+
+        $otp_time_difference_in_minutes = $smsVerifcation->created_at->diffInMinutes(Carbon::now());
+
+        //Checking OTP Code Expiry
+        if($otp_time_difference_in_minutes > config('adminlte.otp_expiry_in_minutes')) {
+            $request["status"] = 'expired';
+            $request['code'] = $request['otp'];
+            $smsVerifcation->updateModel($request);
+            return $this->sendError($this->object,trans('auth.otp_expired_long'));
+        }
+
+      
+        DB::beginTransaction();
+        try {
+
+            $user->verified = "1";
+            $user->save();
+
+            $request["status"] = 'verified';
+            $smsVerifcation->updateModel($request);
+            
+            // $response['token']  =  $user->createToken(config('app.name'))->accessToken;
+            // $response['user'] = new UserResource($user);
+            $user->accessToken = $user->createToken(config('app.name'))->accessToken;
+             
+            DB::commit();
+            return $this->sendResponse(new UserResource($user), trans('auth.mobile_verified'));
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->sendError($this->object,$e->getMessage());
+        }       
+       
+    }
+
+    /**
+     * Resend OTP
+     * 
+     */
+    public function resendOTP(Request $request)
+    {
+        DB::beginTransaction();
+        try{
+            $validator = Validator::make($request->all(), [
+                'user_id'        => 'required|exists:users,id',
+                'mobile_number'  => 'required|digits:10',
+                'country_id'    => 'required|exists:countries,id',
+            ]);
+            if($validator->fails()) {
+                return $this->sendError($this->object, $validator->errors()->first());       
+            }
+            $user = User::find($request->user_id);
+
+            if($user->country_id != $request->country_id){
+                return $this->sendError('', trans('auth.otp_wrong_number'));
+            }
+            /*if($user->mobile_number != $request->mobile_number){
+                return $this->sendError('', trans('auth.otp_wrong_number'));
+            }*/
+
+            /*if($user->verified == '1'){
+                return $this->sendResponse('', trans('auth.number_active'));
+            }*/
+
+            $smsVerifcation = SmsVerification::where(['mobile_number' => $request->mobile_number])
+                            ->latest() //show the latest if there are multiple
+                            ->first();
+
+            if(!$smsVerifcation){
+                return $this->sendResponse($this->object, trans('auth.number_not_found'));
+            }
+
+            //resend otp to mobile number and update 
+            $otp = $this->genrateOtp();
+            $country_code = $user->country->country_code;
+            $mobile_number = $request->mobile_number;
+            $res = $this->sendOtp($country_code,$mobile_number,$otp,$smsVerifcation);
+
+            /*$smsVerifcation->code   = '1234';
+            $smsVerifcation->status = 'pending';
+            $smsVerifcation->created_at = Carbon::now();
+            $smsVerifcation->save();*/
+            DB::commit();
+            if($res){
+                return $this->sendResponse('', trans('auth.otp_sent', ['number'=> $request->mobile_number]));
+            } else {
+                return $this->sendError('',trans('auth.otp_sent_error'));
+            }
+        } catch (\Exception $e) {   
+            DB::rollback();
+            $code = $e->getCode();
+            $message = $e->getMessage();
+            $response = array('code'=>$code,'message'=>$message);
+            return $this->sendError('', trans('auth.otp_sent', $response));
         }
     }
 }

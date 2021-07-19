@@ -1,0 +1,1581 @@
+{
+	"info": {
+		"_postman_id": "fc1a7536-0ae9-4ed9-ba98-1aa06f8ccdde",
+		"name": "Look&Book",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Countries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/countries",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"countries"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Registration",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "mobile_number",
+							"value": "9727332401",
+							"type": "text"
+						},
+						{
+							"key": "country_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "device_type",
+							"value": "android",
+							"type": "text"
+						},
+						{
+							"key": "device_token",
+							"value": "123123123",
+							"type": "text"
+						},
+						{
+							"key": "preferred_language",
+							"value": "en",
+							"type": "text"
+						},
+						{
+							"key": "latitude",
+							"value": "22.970059",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "72.594419",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/registration",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verify OTP",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "user_id",
+							"value": "6",
+							"type": "text"
+						},
+						{
+							"key": "otp",
+							"value": "1234",
+							"type": "text"
+						},
+						{
+							"key": "mobile_number",
+							"value": "9727332401",
+							"type": "text"
+						},
+						{
+							"key": "country_id",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/verify_otp",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"verify_otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resend OTP",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "user_id",
+							"value": "6",
+							"type": "text"
+						},
+						{
+							"key": "mobile_number",
+							"value": "9727332401",
+							"type": "text"
+						},
+						{
+							"key": "country_id",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/resend_otp",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"resend_otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "mobile_number",
+							"value": "9727332401",
+							"type": "text"
+						},
+						{
+							"key": "country_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "latitude",
+							"value": "22.970059",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "72.594419",
+							"type": "text"
+						},
+						{
+							"key": "device_token",
+							"value": "123123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/login",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/logout",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Profile",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/profile",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TRUNCATED_Preferred Language",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/user/lang/en",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"user",
+						"lang",
+						"en"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "States",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/states",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"states"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cities",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/cities/4",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"cities",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Profile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "first_name",
+							"value": "Parth",
+							"type": "text"
+						},
+						{
+							"key": "last_name",
+							"value": "Patel",
+							"type": "text"
+						},
+						{
+							"key": "mobile_number",
+							"value": "9727332401",
+							"type": "text"
+						},
+						{
+							"key": "country_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "parth85@mailinator.com",
+							"type": "text"
+						},
+						{
+							"key": "city_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "latitude",
+							"value": "22.970059",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "72.594419",
+							"type": "text"
+						},
+						{
+							"key": "profile_image",
+							"type": "file",
+							"src": "/C:/Users/madhuri.mahavarkar/Pictures/Consumer_Woman-512.png"
+						},
+						{
+							"key": "gender",
+							"value": "male",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/profile/update",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"profile",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Set Location",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "latitude",
+							"value": "23.5994813",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "58.4444362",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/set_location",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"set_location"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Faqs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/faqs",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"faqs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cms",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/cms",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"cms"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reasons",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/reason_list",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"reason_list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Ticket",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "reason_id",
+							"value": "3",
+							"type": "text"
+						},
+						{
+							"key": "message",
+							"value": "wifi not working in mobile application",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/send_ticket",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"send_ticket"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ticket List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/ticket_list",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"ticket_list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ticket Detail",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/ticket/32",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"ticket",
+						"32"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Home Sliders",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/home_slider",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"home_slider"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Main Categories",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/categories",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"categories"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Saloons Near me",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "category_id",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/saloons_near_me",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"saloons_near_me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Top Rated Saloons",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "category_id",
+							"value": "5",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/top_rated_saloons",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"top_rated_saloons"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Saloon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "search",
+							"value": "atom",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/search_saloon",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"search_saloon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Service",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "search",
+							"value": "hair",
+							"type": "text"
+						},
+						{
+							"key": "saloon_id",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "service_sub_category_id",
+							"value": "7",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/search_services",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"search_services"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Saloon Info",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/saloon_info/2",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"saloon_info",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Saloon Service Categories",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/saloon_service_categories/2/7",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"saloon_service_categories",
+						"2",
+						"7"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Saloon Services",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "saloon_id",
+							"value": "3",
+							"type": "text"
+						},
+						{
+							"key": "service_sub_category_id",
+							"value": "7",
+							"type": "text"
+						},
+						{
+							"key": "order_by",
+							"value": "discount",
+							"type": "text"
+						},
+						{
+							"key": "order_type",
+							"value": "high_to_low",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/saloon_services",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"saloon_services"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Favorite List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/favourites",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"favourites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "AddRemove to Fav",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/favorite_saloon/2",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"favorite_saloon",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Rating",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "saloon_id",
+							"value": "9\n",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "wifi not working in mobile application",
+							"type": "text"
+						},
+						{
+							"key": "rating",
+							"value": "2",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/add_rating",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"add_rating"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Offer List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/offer_list",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"offer_list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Offer Detail",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/offer_detail/5",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"offer_detail",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Notifications",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/notifications",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"notifications"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Service Specialist",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/service_specialists/13",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"service_specialists",
+						"13"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Available times",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "date",
+							"value": "2020-12-08",
+							"type": "text"
+						},
+						{
+							"key": "service_id",
+							"value": "13",
+							"type": "text"
+						},
+						{
+							"key": "specialist_id",
+							"value": "3",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/available_times",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"available_times"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Booking",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "date",
+							"value": "2020-12-11",
+							"type": "text"
+						},
+						{
+							"key": "service_id",
+							"value": "13",
+							"type": "text"
+						},
+						{
+							"key": "specialist_id",
+							"value": "3",
+							"type": "text"
+						},
+						{
+							"key": "time",
+							"value": "19:00:00",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/booking",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"booking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Confirm Booking",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "booking_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "coupon_code",
+							"value": "GET_5%",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/confirm_booking",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"confirm_booking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Booking History",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/booking_history",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"booking_history"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Booking Details",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/booking_details/1",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"booking_details",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancel Booking",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "booking_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "cancel_reason",
+							"value": "Mood Down",
+							"type": "text"
+						},
+						{
+							"key": "cancel_description",
+							"value": "Mood Down Bro",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/cancel_booking",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"cancel_booking"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -25,7 +25,17 @@ class BuddyController extends BaseController
         try{
             $search = @$request->search;
 
-            $users = User::where('status','active')->where('user_type','customer')->where('id','!=',Auth::guard('api')->user()->id);
+            $connected_buddy_ids1 = Buddy::where(function($q1) use($request){
+                                        $q1->where('user1',Auth::guard('api')->user()->id);
+                                    })
+                                    ->where('status','!=','rejected')->pluck('user2')->toArray();
+            $connected_buddy_ids2 = Buddy::where(function($q1) use($request){
+                                        $q1->where('user2',Auth::guard('api')->user()->id);
+                                    })
+                                    ->where('status','!=','rejected')->pluck('user1')->toArray();
+            $connected_buddy_ids = array_merge($connected_buddy_ids1, $connected_buddy_ids2);
+
+            $users = User::where('status','active')->where('user_type','customer')->where('id','!=',Auth::guard('api')->user()->id)->whereNotIn('id',$connected_buddy_ids);
 
             if($search && $search != '') {
                 $users = $users->where('first_name','like','%'.$search.'%');
@@ -64,15 +74,15 @@ class BuddyController extends BaseController
 
             //check if request already sent by any one of users
             $request_sent = Buddy::where('user1',Auth::guard('api')->user()->id)->where('user2',$request->user_id)->where('status','pending')->first();
-            $request_sent1 = Buddy::where('user2',Auth::guard('api')->user()->id)->where('user1',$request->user_id)->where('status',['pending'])->first();
-            if($request_sent && $request_sent1)
+            $request_sent1 = Buddy::where('user2',Auth::guard('api')->user()->id)->where('user1',$request->user_id)->where('status','pending')->first();
+            if($request_sent || $request_sent1)
             {
                 return $this->sendResponse('', trans('buddy.request_already_sent'));
             }
             //check if buddy already exist in buddy list
             $buddy_exist = Buddy::where('user1',Auth::guard('api')->user()->id)->where('user2',$request->user_id)->where('status','accepted')->first();
             $buddy_exist1 = Buddy::where('user2',Auth::guard('api')->user()->id)->where('user1',$request->user_id)->where('status','accepted')->first();
-            if($buddy_exist && $buddy_exist1)
+            if($buddy_exist || $buddy_exist1)
             {
                 return $this->sendResponse('', trans('buddy.buddy_already_exist'));
             }
@@ -135,6 +145,10 @@ class BuddyController extends BaseController
 
             if($buddy->delete())
             {
+                //remove buddy from my fav
+                Favourite::where('buddy_id',$request->buddy_id)->where('user_id',Auth::guard('api')->user()->id)->delete();
+                //remove me from buddy fav
+                Favourite::where('user_id',$request->buddy_id)->where('buddy_id',Auth::guard('api')->user()->id)->delete();
                 DB::commit();
                 return $this->sendResponse('', trans('buddy.buddy_removed'));
             }
@@ -386,9 +400,13 @@ class BuddyController extends BaseController
             $data['favourite_buddies'] = UserResource::collection($fav_buddies);
 
             //connected buddies excluding favourites
-            $buddies = Buddy::where(function($que){
+            $buddies = Buddy::where(function($que) use($favorite_buddy_ids){
                             $que->where('user1',Auth::guard('api')->user()->id)
                             ->orWhere('user2',Auth::guard('api')->user()->id);
+                        })
+                        ->where(function($qu) use($favorite_buddy_ids){
+                            $qu->whereNotIn('user1',$favorite_buddy_ids)
+                            ->whereNotIn('user2',$favorite_buddy_ids);
                         })
                         ->where('status','accepted')->latest()->take(5)->get();
             $data['buddies'] = BuddyResource::collection($buddies);

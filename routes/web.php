@@ -83,6 +83,8 @@ Route::group(['prefix' => 'admin','namespace' => 'Admin'], function () {
 	    Route::post('/customers/ajax', 'CustomerController@index_ajax')->name('ajax_customers');
 	    Route::post('/customers/status', 'CustomerController@status')->name('status');
 	    Route::post('/customers/send_notification/','CustomerController@send_notification')->name('send_notification');
+	    Route::get('customers/{customer_id}/tasks', 'CustomerController@tasks_index')->name('customers.tasks');
+	    Route::post('/customers/tasks/ajax', 'CustomerController@tasks_index_ajax')->name('ajax_tasks');
 
 	    // Contact Us
 	    Route::resource('contact_us', 'ContactUsController');

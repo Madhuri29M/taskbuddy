@@ -21,7 +21,16 @@ return [
 'task_update_error' => 'Something went wrong while updating task.',
 'task_dates_not_found' => 'Task dates not found.',
 'task_dates_not_found' => 'Task dates not found.',
-'task_dates' => 'Task Dates'
+'task_dates' => 'Task Dates',
+'assigned_by' => 'Assigned By',
+'title' => 'Title',
+'description' => 'Description',
+'due_date' => 'Due Date',
+'due_time' => 'Due Time',
+'completed_date' => 'Completed Date',
+'completed_time' => 'Completed Time',
+'rescheduled_at' => 'Rescheduled At',
+'title' => 'Task List',
 
 
 ];

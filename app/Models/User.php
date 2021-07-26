@@ -115,9 +115,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $check;
     }
 
-     public function review()
+    public function review()
     {
         return $this->hasOne('App\Models\Rating','user_id');
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany('App\Models\Task','assigned_to');
     }
 
 }

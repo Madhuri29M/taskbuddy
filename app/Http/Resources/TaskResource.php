@@ -24,7 +24,7 @@ class TaskResource extends JsonResource
         if($this->attachments)
         {
             foreach ($this->attachments as $key => $attachment) {
-                $attachments[$key]['attachment_id'] = $attachment->id;
+                $attachments[$key]['attachment_id'] = (string)$attachment->id;
                 $attachments[$key]['attachment'] = asset($attachment->attachment);
             }
         }
@@ -45,7 +45,7 @@ class TaskResource extends JsonResource
             'assigned_by' => $this->assignedBy ? new UserResource($this->assignedBy) : null ,
             'due_date' => $this->due_date ? (string)date('d M Y',strtotime($this->due_date)) : '' ,
             'due_time' => $this->due_time ? (string)date('h:i A',strtotime($this->due_time)) : '' ,
-            'status' => $this->status,
+            'status' => ucfirst($this->status),
             'attachments' => $attachments,
             'task_history' => $task_history
         ];

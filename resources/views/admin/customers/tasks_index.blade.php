@@ -12,7 +12,7 @@
 <div class="content-wrapper"> 
   <section class="content-header">
     <h1>
-      {{ trans('customers.heading') }}
+      Tasks of {{ ucfirst($customer->first_name) }}
     </h1>
     <ol class="breadcrumb">
       <li><a href="{{route('home')}}"><i class="fa fa-dashboard"></i>{{ trans('common.home') }}</a></li>
@@ -24,21 +24,28 @@
       <div class="col-xs-12">
         <div class="box">
           <div class="box-header">
-            <h3 class="box-title">{{ trans('customers.title') }}
+            <h3 class="box-title">{{ trans('task.title') }}</h3>
+            <ul class="pull-right">
+                <a href="{{route('customers.index')}}" class="btn btn-success">
+                    <i class="fa fa-arrow-left"></i>
+                    {{ trans('common.back') }}
+                </a>
+            </ul>
           </div>
           <div class="box-body">
             <table id="customers" class="table table-bordered table-hover">
               <thead>
                 <tr>
                   <th>{{ trans('common.id') }}</th>
-                  <th>{{ trans('customers.name') }}</th>
-                  <th>{{ trans('customers.email') }}</th>
-                  <th>{{ trans('customers.phone_number') }}</th>
-                  <th>{{ trans('customers.no_of_task') }}</th>
-                  <th>{{ trans('customers.registered_on') }}</th>
-                  <th>{{ trans('customers.verification_status') }}</th>
+                  <th>{{ trans('task.assigned_by') }}</th>
+                  <th>{{ trans('task.title') }}</th>
+                  <th>{{ trans('task.description') }}</th>
+                  <th>{{ trans('task.due_date') }}</th>
+                  <th>{{ trans('task.due_time') }}</th>
+                  <th>{{ trans('task.completed_date') }}</th>
+                  <th>{{ trans('task.completed_time') }}</th>
+                  <th>{{ trans('task.rescheduled_at') }}</th>
                   <th>{{ trans('common.status') }}</th>
-                  <th>{{ trans('common.action') }}</th>
                   <th hidden="hidden">{{trans('common.status')}} </th>
                 </tr>
               </thead>
@@ -48,15 +55,15 @@
               <tfoot>
                  <tr>
                   <th>{{ trans('common.id') }}</th>
-                  <th>{{ trans('customers.name') }}</th>
-                  <!-- <th>{{ trans('customers.last_name') }}</th> -->
-                  <th>{{ trans('customers.email') }}</th>
-                  <th>{{ trans('customers.phone_number') }}</th>
-                  <th>{{ trans('customers.no_of_task') }}</th>
-                  <th>{{ trans('customers.registered_on') }}</th>
-                  <th>{{ trans('customers.verification_status') }}</th>
+                  <th>{{ trans('task.assigned_by') }}</th>
+                  <th>{{ trans('task.title') }}</th>
+                  <th>{{ trans('task.description') }}</th>
+                  <th>{{ trans('task.due_date') }}</th>
+                  <th>{{ trans('task.due_time') }}</th>
+                  <th>{{ trans('task.completed_date') }}</th>
+                  <th>{{ trans('task.completed_time') }}</th>
+                  <th>{{ trans('task.rescheduled_at') }}</th>
                   <th>{{ trans('common.status') }}</th>
-                  <th>{{ trans('common.action') }}</th>
                   <th hidden="hidden">{{trans('common.status')}} </th>
                 </tr>
               </tfoot>
@@ -161,7 +168,7 @@
                     search: 'applied',
                     order: 'applied'
                 },
-                columns: [0, 1, 2 , 3 ,4 ,7]
+                columns: [0, 1, 2 , 3 ,4 ,5, 6, 7, 8, 9]
             },
           },
         ],
@@ -175,85 +182,20 @@
               url: lang_url
       },
       ajax: {
-          url: "{{route('ajax_customers')}}",
-          data: {"_token": "{{csrf_token()}}"},
+          url: "{{route('ajax_tasks')}}",
+          data: {"_token": "{{csrf_token()}}","customer_id":"{{$customer_id}}"},
         },
         columns: [
-          { 
-            data: 'id',
-            mRender : function(data, type, row) { 
-                // return "<a href == row['show']";
-                return '<a class="" href="'+row["show"]+'">'+row.id+'</a>';
-              },
-          },
-          { 
-            data: 'name',
-            mRender : function(data, type, row) { 
-              return '<a class="" href="'+row["show"]+'">'+row.name+'</a>';
-            },
-          },
-          { 
-            data: 'email',
-            mRender : function(data, type, row) { 
-              return '<a class="" href="'+row["show"]+'">'+row.email+'</a>';
-            },
-          },
-          { 
-            data: 'mobile_number',
-            mRender : function(data, type, row) { 
-              return '<a class="" href="'+row["show"]+'">'+row.mobile_number+'</a>';
-            },
-          },
-          { 
-            data: 'task_counts',
-            mRender : function(data, type, row) { 
-              return '<a class="" href="'+row["my_tasks"]+'">'+row.task_counts+'</a>';
-            },
-          },
-          { 
-            data: 'registered_on',
-            mRender : function(data, type, row) { 
-              return '<a class="" href="'+row["show"]+'">'+row.registered_on+'</a>';
-            },
-          },
-          { 
-            data: 'verified',
-            mRender : function(data, type, row) { 
-              if(row.verified == '1'){
-                var ver = "{{trans('customers.verified')}}";
-              } else {
-                var ver = "{{trans('customers.not_verified')}}";
-              }
-              return '<a class="" href="'+row["show"]+'">'+ver+'</a>';
-            },
-            orderable:false,
-          },
-          { 
-            data: 'status',
-            mRender : function(data, type, row) {
-                  var status=data;
-                  // console.log(status);
-                  active_selected = '';
-                  inactive_selected = '';
-                  blocked_selected = '';
-
-                  if (status=='active'){
-                    active_selected="selected";
-                  }
-                  else if(status=='inactive'){
-                  	inactive_selected="selected";
-                  }
-                  else {
-                    blocked_selected='selected';
-                  }
-                 return '<select class="status form-control" id="'+row["id"]+'"><option value="active"'+active_selected+'>{{trans("common.active")}}</option><option value="inactive"'+inactive_selected+'>{{trans("common.inactive")}}</option></select><span class="loading" style="visibility: hidden;"><i class="fa fa-spinner fa-spin fa-1x fa-fw"></i><span class="sr-only">{{trans("common.loading")}}</span></span>';
-            },orderable:false,
-          },
-          { 
-            mRender : function(data, type, row) {
-                return '<form action="'+row["show"]+'" method="get"><button class="btn" type="submit"><i class="fa fa-eye"></i></button></form> <form action=""'+row["id"]+'" <button class="btn notifyModal" type="submit" data-id="'  +row["id"]+'"><i class="fa fa-send"></i></button></form>'; 
-            }, orderable: false, searchable: false
-          },
+          { data: 'id'},
+          { data: 'assigned_by_buddy'},
+          { data: 'title'},
+          { data: 'description'},
+          { data: 'due_date'},
+          { data: 'due_time'},
+          { data: 'completed_date'},
+          { data: 'completed_time'},
+          { data: 'rescheduled_at'},
+          { data: 'task_status'},
           { 
             data: 'status',
             visible: false

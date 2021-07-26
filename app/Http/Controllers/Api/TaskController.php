@@ -39,6 +39,7 @@ class TaskController extends BaseController
             if($validator->fails()){
                 return $this->sendValidationError('', $validator->errors()->first());       
             }
+            \Log::info("attachments:");
             \Log::info($request->attachments);
             //check if date is not past
             if(strtotime(date('Y-m-d H:i:s')) > strtotime($request->date.' '.$request->time)) 
@@ -266,9 +267,11 @@ class TaskController extends BaseController
 
             $task_dates = Task::whereYear('due_date', '=', $request->year)
               ->whereMonth('due_date', '=', $request->month)
+              ->where('assigned_to',Auth::guard('api')->user()->id)
+              ->orderBy('due_date','asc')
               ->get()->pluck('due_date')->toArray();
 
-            $response['task_dates'] = $task_dates; 
+            $response['task_dates'] = array_values(array_unique($task_dates)); 
             if(count($task_dates))
             {
                 return $this->sendResponse($response, trans('task.task_dates'));

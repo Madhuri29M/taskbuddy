@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Task;
 use Validator,Auth,DB;
 use App\Models\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Mail;
@@ -52,11 +53,6 @@ class CustomerController extends Controller
         $columnName      =    $request['columns'][$columnIndex]['data']; // Column name
         $columnSortOrder =    $request['order'][0]['dir']; // asc or desc
         $searchValue     =    $request['search']['value']; // Search value
-
-      //   $user  =  Auth::user();
-      //   if($user->user_type == 'customer') {
-      //   $query = User::where('user_type','customer');
-      // }
      
     
         ## Total number of records without filtering
@@ -88,6 +84,8 @@ class CustomerController extends Controller
         ## Set dynamic route for action buttons
             // $emp['edit']= route("country.edit",$emp["id"]);
             $emp['name']= $emp["first_name"].' '.$emp["last_name"];
+            $emp['task_counts']= count($emp->tasks);
+            $emp['my_tasks']= route("customers.tasks",$emp["id"]);
             $emp['email']= ($emp["email"]) ? $emp["email"] : '';
             $emp['show']= route("customers.show",$emp["id"]);
             $emp['delete'] = route("customers.destroy",$emp["id"]);
@@ -240,5 +238,99 @@ class CustomerController extends Controller
     
         return response()->json(['message' => 'Notification Sent','type'=>'success']);
     }
+
+    /**
+     * Display a listing of customers tasks.
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+    public function tasks_index($customer_id) {
+      $page_title = trans('tasks.heading');
+      $customer = User::find($customer_id);
+      return view ('admin.customers.tasks_index',compact('page_title','customer_id','customer')); 
+    }
+
+    /**
+     * Customers Tasks.
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+    public function tasks_index_ajax(Request $request) {
+        $query = Task::where('assigned_to',$request->customer_id);
+        $totalRecords = $query->count();
+        $request         =    $request->all();
+        $draw            =    $request['draw'];
+        $row             =    $request['start'];
+        $length = ($request['length'] == -1) ? $totalRecords : $request['length']; 
+        $rowperpage      =    $length; // Rows display per page
+        $columnIndex     =    $request['order'][0]['column']; // Column index
+        $columnName      =    $request['columns'][$columnIndex]['data']; // Column name
+        $columnSortOrder =    $request['order'][0]['dir']; // asc or desc
+        $searchValue     =    $request['search']['value']; // Search value
+     
+    
+        ## Total number of records without filtering
+        $total = $query->count();
+        $totalRecords = $total;
+
+        ## Total number of record with filtering
+        $filter = $query;
+
+        if($searchValue != ''){
+            $filter = $filter->where(function($q)use ($searchValue) {
+                        $q->where('title','like','%'.$searchValue.'%')
+                        ->orWhere('description','like','%'.$searchValue.'%')
+                        ->orWhere('due_date','like','%'.$searchValue.'%')
+                        ->orWhere('due_time','like','%'.$searchValue.'%')
+                        ->orWhere('completed_date','like','%'.$searchValue.'%')
+                        ->orWhere('completed_time','like','%'.$searchValue.'%')
+                        ->orWhere('rescheduled_at','like','%'.$searchValue.'%')
+                        ->orWhere('status','like','%'.$searchValue.'%')
+                        ->orWhere('id','like','%'.$searchValue.'%')
+                        ->orWhereHas('assignedBy',function($que)use ($searchValue) {
+                            $que->where('first_name','like','%'.$searchValue.'%');
+                        });
+                     });
+        }
+
+        $filter_count = $filter->count();
+        $totalRecordwithFilter = $filter_count;
+
+        ## Fetch records
+        $empQuery = $filter;
+        $empQuery = $empQuery->orderBy($columnName, $columnSortOrder)->offset($row)->limit($rowperpage)->get();
+        $data = array();
+        foreach ($empQuery as $emp) {
+            ## Set dynamic route for action buttons
+            if(!$emp->completed_date)
+            {
+                $emp->completed_date = "N/A";
+            }
+            if(!$emp->completed_time)
+            {
+                $emp->completed_time = "N/A";
+            }
+            if(!$emp->rescheduled_at)
+            {
+                $emp->rescheduled_at = "N/A";
+            }
+            $emp->task_status = ucfirst($emp->status);
+            $emp->assigned_by_buddy = $emp->assignedBy->first_name;
+            $data[]=$emp;
+        }
+
+        ## Response
+        $response = array(
+          "draw" => intval($draw),
+          "iTotalRecords" => $totalRecords,
+          "iTotalDisplayRecords" => $totalRecordwithFilter,
+          "aaData" => $data
+        );
+
+        echo json_encode($response);
+    }
+
 
   }

@@ -19,8 +19,8 @@ class CreateTasksTable extends Migration
             $table->foreign('assigned_by')->references('id')->on('users')->onDelete('cascade');
             $table->bigInteger('assigned_to')->unsigned()->nullable();
             $table->foreign('assigned_to')->references('id')->on('users')->onDelete('cascade');
-            $table->string('title'); 
-            $table->longText('description'); 
+            $table->longText('title'); 
+            $table->longText('description')->nullable(); 
             $table->date('due_date');
             $table->time('due_time');
             $table->date('completed_date')->nullable();

@@ -136,15 +136,21 @@ class ProfileController extends BaseController
 
         $user = Auth::user();
         $country = Country::find($request->country_id);
+        
+
+        $user->mobile_number = $request->mobile_number;
+        $user->verified = '1';
+        $res = $user->save();
         //send and store otp
-        $otp = $this->genrateOtp();
-        $country_code = $country->country_code;
-        $mobile_number = $request->mobile_number;
-        $res = $this->sendOtp($country_code,$mobile_number,$otp);
+        // $otp = $this->genrateOtp();
+        // $country_code = $country->country_code;
+        // $mobile_number = $request->mobile_number;
+        // $res = $this->sendOtp($country_code,$mobile_number,$otp);
 
 
         if($res){
-            return $this->sendResponse(new UserResource($user), trans('auth.otp_sent',['number'=>$request->mobile_number]));
+            // return $this->sendResponse(new UserResource($user), trans('auth.otp_sent',['number'=>$request->mobile_number]));
+            return $this->sendResponse(new UserResource($user), trans('auth.mobile_changed'));
         } else {
             return $this->sendError('',trans('auth.otp_sent_error'));
         }

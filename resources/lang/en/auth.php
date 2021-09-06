@@ -81,7 +81,7 @@ return [
     'no_forgot_request_found' => 'No any request found for forgot password.',
 
     //new
-    'device_type_error' => 'Device type should either android or ios',
+    'device_type_error' => 'Device type should either android or iphone',
     'email_already_exists' => 'This email is already registered',
     'you_can_login' => 'You are already registered, Please login with your credentials',
     'registered_verify_otp' => 'You are registered, Please verify your account using OTP sent to your phone number',

@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Route;
     Route::get('terms_and_conditions/{locale}','Api\CmsController@customer_terms_conditions_url')->name('cms.terms_and_conditions');
     Route::get('about_us/{locale}','Api\CmsController@about_us_url')->name('cms.about_us');
 
+    Route::get('task_notifications','Api\HomeController@task_notifications')->name('task_notifications');
+
 
     Route::middleware(['auth:api'])->group( function() {
         Route::post('logout', 'Api\Auth\AuthController@logout');
@@ -70,6 +72,7 @@ use Illuminate\Support\Facades\Route;
         Route::post('accept_buddy_request',  'Api\BuddyController@accept_buddy_request');
         Route::post('reject_buddy_request',  'Api\BuddyController@reject_buddy_request');
         Route::post('buddy_list',  'Api\BuddyController@buddy_list');
+        Route::get('buddy_list_for_filter',  'Api\BuddyController@buddy_list_for_filter');
         Route::post('buddy_profile',  'Api\BuddyController@buddy_profile');
         Route::get('favourite/{id}',   'Api\BuddyController@add_remove_favourite');
         Route::get('favourite_buddies',   'Api\BuddyController@favourite_buddies');
@@ -90,6 +93,12 @@ use Illuminate\Support\Facades\Route;
         Route::post('history',  'Api\TaskController@history');
         Route::post('accept_task',  'Api\TaskController@accept_task');
         Route::post('reject_task',  'Api\TaskController@reject_task');
+        Route::post('task_details',  'Api\TaskController@task_details');
+        Route::post('delayed_task_by_me',  'Api\TaskController@delayed_task_by_me');
+        Route::post('delayed_task_by_buddy',  'Api\TaskController@delayed_task_by_buddy');
+        Route::post('notify_buddy_for_delayed_task',  'Api\TaskController@notify_buddy_for_delayed_task');
+
+
 
         //dashboard
         Route::get('dashboard',  'Api\HomeController@dashboard');

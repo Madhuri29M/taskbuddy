@@ -35,16 +35,12 @@ class AuthController extends BaseController
             'mobile_number'  => 'required|digits:10|unique:users',
             'country_id'     => 'required|exists:countries,id',
             // 'firebase_token' => 'required|unique:users',
-            'device_token'   => 'required',
-            'device_type'    => 'required',
+            // 'device_token'   => 'required',
+            // 'device_type'    => 'required',
         ]);
 
         if($validator->fails()) {
             return $this->sendError($this->object, $validator->errors()->first());       
-        }
-
-        if($request->device_type != 'iphone' && $request->device_type != 'android'){
-            return $this->sendError('',trans('auth.device_type_error'));
         }
 
         // Create New User Eloquent Instance
@@ -83,12 +79,11 @@ class AuthController extends BaseController
                     DeviceDetail::create($createArray);
                 }
 
-                $otp = $this->genrateOtp();
+                /*$otp = $this->genrateOtp();
                 $country_code = $user->country->country_code;
                 $mobile_number = $request->mobile_number;
                 $res = $this->sendOtp($country_code,$mobile_number,$otp);
 
-                DB::commit();
                 if($res)
                 {
                     //send welcome email to customer
@@ -96,9 +91,10 @@ class AuthController extends BaseController
                 }
                 else{
                     return $this->sendError('',trans('auth.otp_sent_error'));
-                }
-                /*$user->accessToken = $user->createToken(config('app.name'))->accessToken;
-                return $this->sendResponse(new UserResource($user), trans('auth.registered_successfully'));*/
+                }*/
+                DB::commit();
+                $user->accessToken = $user->createToken(config('app.name'))->accessToken;
+                return $this->sendResponse(new UserResource($user), trans('auth.registered_successfully'));
                 
                
             }else{
@@ -133,6 +129,9 @@ class AuthController extends BaseController
         if(!$user){
             return $this->sendError($this->object,trans('auth.user_not_valid'));
         }
+        if($request->device_type != 'iphone' && $request->device_type != 'android'){
+            return $this->sendError('',trans('auth.device_type_error'));
+        }
         /*if($user->firebase_token != $request->firebase_token)
         {
             return $this->sendError($this->object,trans('auth.firebase_token_not_valid'));
@@ -147,10 +146,10 @@ class AuthController extends BaseController
                     ->latest() //show the latest if there are multiple
                     ->first();
         //send & store otp
-        $otp = $this->genrateOtp();
+        /*$otp = $this->genrateOtp();
         $country_code = $user->country->country_code;
         $mobile_number = $request->mobile_number;
-        $res = $this->sendOtp($country_code,$mobile_number,$otp,$smsVerifcation);
+        $res = $this->sendOtp($country_code,$mobile_number,$otp,$smsVerifcation);*/
 
         // Save Device Details
         $data = $request->except('mobile_number','country_id');
@@ -167,15 +166,15 @@ class AuthController extends BaseController
             DeviceDetail::create($createArray);
         }
 
-        if($res) {
+        /*if($res) {
             return $this->sendResponse(new UserResource($user), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
         }
         else
         {
             return $this->sendError('',trans('auth.otp_sent_error'));
-        }
-        // $user->accessToken = $user->createToken(config('app.name'))->accessToken;
-        // return $this->sendResponse(new UserResource($user), trans('auth.login_success'));
+        }*/
+        $user->accessToken = $user->createToken(config('app.name'))->accessToken;
+        return $this->sendResponse(new UserResource($user), trans('auth.login_success'));
 
     }
 
@@ -234,7 +233,7 @@ class AuthController extends BaseController
                 $customer->save();
 
                 //send and store otp
-                $otp = $this->genrateOtp();
+                /*$otp = $this->genrateOtp();
                 $country_code = $customer->country->country_code;
                 $mobile_number = $request->mobile_number;
                 $res = $this->sendOtp($country_code,$mobile_number,$otp);
@@ -243,7 +242,7 @@ class AuthController extends BaseController
                     return $this->sendResponse(new UserResource($customer), trans('auth.otp_sent', ['number'=> $request->mobile_number]));
                 } else {
                     return $this->sendError('',trans('auth.otp_sent_error'));
-                }
+                }*/
 
             } else {
                 if($customer->first_name == ''){
@@ -269,7 +268,7 @@ class AuthController extends BaseController
                     $customer->save();
 
                     //send and store otp
-                    $otp = $this->genrateOtp();
+                    /*$otp = $this->genrateOtp();
                     $country_code = $customer->country->country_code;
                     $mobile_number = $request->mobile_number;
                     $res = $this->sendOtp($country_code,$mobile_number,$otp);
@@ -279,7 +278,7 @@ class AuthController extends BaseController
                     }
                     else{
                         return $this->sendError('',trans('auth.otp_sent_error'));
-                    }
+                    }*/
                 }
             }
             
@@ -360,14 +359,36 @@ class AuthController extends BaseController
             'user_id'       => 'required|exists:users,id',
             'mobile_number' => 'required|digits:10',
             'country_id'    => 'required|exists:countries,id',
-            'otp'           => 'required|min:4|max:4'
+            'otp'           => 'required|min:4|max:4',
+            'device_token'  => 'required',
+            'device_type'   => 'required',
         ]);
 
         if($validator->fails()) {
             return $this->sendError($this->object, $validator->errors()->first());       
         }
 
+        if($request->device_type != 'iphone' && $request->device_type != 'android'){
+            return $this->sendError('',trans('auth.device_type_error'));
+        }
+        
         $user = User::find($request->user_id);
+
+        // Save Device Details
+        $data = $request->except('user_id','mobile_number','country_id','otp');
+        $createArray = array();
+        
+        foreach ($data as $key => $value) {
+            $createArray[$key] = $value;
+        }
+        \Log::info($createArray);
+        $device_detail = DeviceDetail::where('user_id',$user->id)->first();
+        if($device_detail){
+            $device_detail->update($createArray);
+        } else {
+            $createArray['user_id'] = $user->id;
+            DeviceDetail::create($createArray);
+        }
 
         $smsVerifcation = SmsVerification::where(['mobile_number' => $request->mobile_number,'status' => 'pending'])
                         ->latest() //show the latest if there are multiple

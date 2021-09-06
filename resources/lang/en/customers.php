@@ -44,6 +44,7 @@ return [
     'status_updated' => 'Customer Status Updated Successfully',
     'verified' => 'Verified',
     'not_verified' => 'Not Verified',
-    'verification_status' => 'Verification Status'
+    'verification_status' => 'Verification Status',
+    'no_of_task' => 'No of Tasks'
 
 ];

@@ -43,6 +43,7 @@ class TaskResource extends JsonResource
             'title' => $this->title ? (string)$this->title : '' ,
             'description' => $this->description ? (string)$this->description : '' ,
             'assigned_by' => $this->assignedBy ? new UserResource($this->assignedBy) : null ,
+            'assigned_to' => $this->assignedTo ? new UserResource($this->assignedTo) : null ,
             'due_date' => $this->due_date ? (string)date('d M Y',strtotime($this->due_date)) : '' ,
             'due_time' => $this->due_time ? (string)date('h:i A',strtotime($this->due_time)) : '' ,
             'status' => ucfirst($this->status),

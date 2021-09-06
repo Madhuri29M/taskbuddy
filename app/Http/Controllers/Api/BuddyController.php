@@ -38,7 +38,13 @@ class BuddyController extends BaseController
             $users = User::where('status','active')->where('user_type','customer')->where('id','!=',Auth::guard('api')->user()->id)->whereNotIn('id',$connected_buddy_ids);
 
             if($search && $search != '') {
-                $users = $users->where('first_name','like','%'.$search.'%');
+                $users = $users->where(function($que) use($search){
+                                $que->where('first_name','like','%'.$search.'%')
+                                ->orWhere('company_name','like','%'.$search.'%')
+                                ->orWhere('designation','like','%'.$search.'%')
+                                ->orWhere('email','like','%'.$search.'%')
+                                ->orWhere('mobile_number','like','%'.$search.'%');
+                            });
             }
 
             $users = $users->paginate();
@@ -91,10 +97,10 @@ class BuddyController extends BaseController
             $buddy->user1 = Auth::guard('api')->user()->id;
             $buddy->user2 = $request->user_id;
             if($buddy->save()){
-                //notify buddy
+                // New Buddy Request Notification (System Notification To Reciever)
                 $user     = User::where(['id' => $request->user_id])->first();
                 $title    = trans('notify.buddy_request_title');
-                $body     = trans('notify.buddy_request_body',['buddy_name' => Auth::guard('api')->user()->first_name]);
+                $body     = trans('notify.buddy_request_body',['user' => $user->first_name,'buddy_name' => Auth::guard('api')->user()->first_name]);
                 $slug     = 'buddy_request';
                 $buddy_id = Auth::guard('api')->user()->id;
 
@@ -167,7 +173,7 @@ class BuddyController extends BaseController
     public function buddy_requests(Request $request) {
         DB::beginTransaction();
         try{
-            $buddy_requests = Buddy::where('user2',Auth::guard('api')->user()->id)->where('status','pending')->paginate();
+            $buddy_requests = Buddy::where('user2',Auth::guard('api')->user()->id)->where('status','pending')->orderBy('created_at','desc')->paginate();
 
             if(count($buddy_requests))
             {
@@ -208,6 +214,16 @@ class BuddyController extends BaseController
 
             $buddy_request->status = 'accepted';
             if($buddy_request->save()){
+
+                // Buddy Request Accept Notification (System Notification To sender when receiver accept the request)
+                $user     = User::where(['id' => $buddy_request->user1])->first();
+                $title    = trans('notify.buddy_request_accepted_title');
+                $body     = trans('notify.buddy_request_accepted_body',['user' => $user->first_name,'buddy_name' => Auth::guard('api')->user()->first_name]);
+                $slug     = 'buddy_request_accepted';
+                $buddy_id = Auth::guard('api')->user()->id;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id);
+
                 DB::commit();
                 return $this->sendResponse('', trans('buddy.request_accepted',['buddy_name'=>$buddy_request->user_1->first_name]));
             }else{
@@ -293,6 +309,46 @@ class BuddyController extends BaseController
             if(count($buddies))
             {
                 return $this->sendPaginateResponse(BuddyResource::collection($buddies), trans('buddy.buddy_list'));
+            }
+            else
+            {
+                return $this->sendResponse([],trans('buddy.buddies_not_found'));
+            }
+        }catch(\Exception $e){
+            return $this->sendError('',$e->getMessage());           
+        }
+    }
+
+    /**
+     * Buddy List for filter.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function buddy_list_for_filter(Request $request) {
+        try{
+            $search = @$request->search;
+
+            $buddies = Buddy::where(function($que){
+                            $que->where('user1',Auth::guard('api')->user()->id)
+                            ->orWhere('user2',Auth::guard('api')->user()->id);
+                        })
+                        ->where('status','accepted')->get();
+
+            $response = [];
+            foreach ($buddies as $bd) {
+                $user = $bd->user_1;
+                if($bd->user1 == Auth::guard('api')->user()->id)
+                {
+                    $user = $bd->user_2;
+                }
+                $buddy['id'] = (string)$user->id; 
+                $buddy['name'] = (string)$user->first_name; 
+                $response[] = $buddy;
+            }
+            if(count($buddies))
+            {
+                return $this->sendResponse($response, trans('buddy.buddy_list'));
             }
             else
             {

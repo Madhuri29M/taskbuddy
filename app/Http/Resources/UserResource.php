@@ -36,7 +36,7 @@ class UserResource extends JsonResource
             'bio' => (string)$this->bio ?? "",
             'email' => (string)$this->email ?? "",
             'mobile_number' => (string)$this->mobile_number ?? "",
-            'profile_image' => $this->profile_image ? asset($this->profile_image) : asset('customer_avtar.png'),
+            'profile_image' => $this->profile_image ? asset($this->profile_image) : asset('customer_avtar.jpeg'),
             'country' => new CountryResource($this->country),
             'preferred_language' => (string)$this->preferred_language,
             'is_social_login' => ($this->social_type == 'social') ? "1" : "0",

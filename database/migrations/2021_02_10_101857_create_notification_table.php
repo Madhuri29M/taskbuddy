@@ -25,6 +25,8 @@ class CreateNotificationTable extends Migration
             $table->string('slug')->nullable();
             $table->bigInteger('buddy_id')->unsigned()->nullable();
             $table->foreign('buddy_id')->references('id')->on('users')->onDelete('cascade');
+            $table->bigInteger('task_id')->unsigned()->nullable();
+            $table->foreign('task_id')->references('id')->on('tasks')->onDelete('cascade');
             $table->timestamps();
 
         });

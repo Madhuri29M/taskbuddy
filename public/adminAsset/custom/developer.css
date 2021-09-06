@@ -41,7 +41,7 @@
 
 
   .skin-blue .main-header .navbar {background-color: #7C80F0;}
-  .skin-blue .main-header .logo {background-color: #fff;}
-  .skin-blue .main-header .logo:hover {background-color: #fff3f9 !important;}
+  .skin-blue .main-header .logo {background-color: #7C80F0;}
+  .skin-blue .main-header .logo:hover {background-color: #7C80F0 !important;}
   .logo-mini {color: #7C80F0}
   .skin-blue .main-header li.user-header {background-color: #7C80F0;}

@@ -29,9 +29,9 @@ class TaskController extends BaseController
         DB::beginTransaction();
         try{
             $validator = Validator::make($request->all(), [
-                'title'         => 'required|string|min:3|max:50',
-                'description'   => 'required|string|max:500',
-                'attachments.*' => 'mimes:png,jpg,jpeg,svg,pdf,doc,docx|max:10000',
+                'title'         => 'required|string',
+                'description'   => 'nullable|string|max:500',
+                'attachments.*' => 'mimes:png,jpg,jpeg,pdf,doc,docx|max:10000',
                 'date'          => 'required|date|date_format:Y-m-d',
                 'time'          => 'required|date_format:H:i:s',
                 'assign_to'     => 'required|exists:users,id',
@@ -54,11 +54,16 @@ class TaskController extends BaseController
             $task->description = $request->description;
             $task->due_date = $request->date;
             $task->due_time = $request->time;
+            $task->created_at = date('Y-m-m H:i:00');
+            if(Auth::guard('api')->user()->id == $request->assign_to)
+            {
+                $task->status = 'accepted';
+            }
             if($task->save()){
 
                 //upload attachments
                 // echo "<pre>";print_r($attachments);exit;
-                if($request->hasFile('attachments'))
+                if($request->attachments)
                 {
                     // echo "<pre>";print_r("this");exit;
                     $attachments = $request->attachments;
@@ -68,6 +73,10 @@ class TaskController extends BaseController
                             $attachment_type = $attachment->getClientMimeType();
                             $attachment_type_arr = explode("/", $attachment_type, 2);
                             if($attachment_type_arr[0] == 'image')
+                            {
+                                $attachment_type = 'image';
+                            }
+                            if($attachment_type = "application/octet-stream")
                             {
                                 $attachment_type = 'image';
                             }
@@ -91,7 +100,7 @@ class TaskController extends BaseController
                 $slug     = 'task_request';
                 $buddy_id = Auth::guard('api')->user()->id;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id);
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
                 DB::commit();
                 return $this->sendResponse('', trans('task.task_created'));
             }else{
@@ -116,6 +125,7 @@ class TaskController extends BaseController
             $todays_tasks = Task::where('assigned_to',Auth::guard('api')->user()->id)
                                     ->where('due_date',date('Y-m-d'))
                                     ->where('status','accepted')
+                                    ->orderBy('due_time','asc')
                                     ->paginate();
 
 
@@ -156,6 +166,16 @@ class TaskController extends BaseController
             {   
                 $status = 'Trashed';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
+
+                // Move to trash Notification (From Buddy To Task Owner)
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_trashed_title');
+                $body     = trans('notify.task_trashed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                $slug     = 'task_trashed';
+                $buddy_id = $task->assigned_to;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
                 return $this->sendResponse(new TaskResource($task), trans('task.task_moved_to_trash'));
             }
             else
@@ -193,6 +213,16 @@ class TaskController extends BaseController
             {   
                 $status = 'Completed';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
+
+                // Task Completed Notification (From Buddy To Task Owner)
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_completed_title');
+                $body     = trans('notify.task_completed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                $slug     = 'task_completed';
+                $buddy_id = $task->assigned_to;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
                 return $this->sendResponse(new TaskResource($task), trans('task.marked_as_done'));
             }
             else
@@ -237,6 +267,16 @@ class TaskController extends BaseController
             {   
                 $status = 'Rescheduled';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
+
+                // Task Reschedule Notification (From Buddy To Task Owner)
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_rescheduled_title');
+                $body     = trans('notify.task_rescheduled_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                $slug     = 'task_rescheduled';
+                $buddy_id = $task->assigned_to;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
                 return $this->sendResponse(new TaskResource($task), trans('task.task_rescheduled'));
             }
             else
@@ -302,7 +342,11 @@ class TaskController extends BaseController
             $assigned_to_me = Task::where('assigned_to',Auth::guard('api')->user()->id);
 
             if($search && $search != '') {
-                $assigned_to_me = $assigned_to_me->where('title','like','%'.$search.'%');
+                $assigned_to_me = $assigned_to_me->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
+                                    
             }
 
             if($status && $status != '') {
@@ -318,7 +362,7 @@ class TaskController extends BaseController
             {
                 if($from_date)
                 {
-                    $assigned_to_me = $assigned_to_me->whereDate('due_date', $from_date);
+                    $assigned_to_me = $assigned_to_me->whereDate('due_date','>=', $from_date);
                 }
             }
 
@@ -342,7 +386,7 @@ class TaskController extends BaseController
                     $que->whereIn('attachment_type',$type);
                 });
             }
-            $assigned_to_me = $assigned_to_me->paginate();
+            $assigned_to_me = $assigned_to_me->orderBy('due_date','desc')->paginate();
             if(count($assigned_to_me))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($assigned_to_me), trans('task.task_assigned_to_me'));
@@ -364,15 +408,6 @@ class TaskController extends BaseController
 
     public function assigned_to_buddy(Request $request) {
         try{
-
-            $validator=  Validator::make($request->all(),[
-                'user_id'         => 'required|numeric|exists:users,id',
-            ]);
-
-            if($validator->fails()) {
-                return $this->sendValidationError('', $validator->errors()->first());
-            }
-
             $search          = @$request->search;
             $status          = @$request->status;
             $from_date       = @$request->from_date;
@@ -383,7 +418,10 @@ class TaskController extends BaseController
                                 ->where('assigned_to','!=',Auth::guard('api')->user()->id);
 
             if($search && $search != '') {
-                $assigned_to_buddy = $assigned_to_buddy->where('title','like','%'.$search.'%');
+                $assigned_to_buddy = $assigned_to_buddy->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
             }
 
             if($status && $status != '') {
@@ -399,7 +437,7 @@ class TaskController extends BaseController
             {
                 if($from_date)
                 {
-                    $assigned_to_me = $assigned_to_me->whereDate('due_date', $from_date);
+                    $assigned_to_buddy = $assigned_to_buddy->whereDate('due_date','>=', $from_date);
                 }
             }
 
@@ -424,7 +462,7 @@ class TaskController extends BaseController
                 });
             }
 
-            $assigned_to_buddy = $assigned_to_buddy->paginate();
+            $assigned_to_buddy = $assigned_to_buddy->orderBy('due_date','desc')->paginate();
             if(count($assigned_to_buddy))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($assigned_to_buddy), trans('task.task_assigned_by_me'));
@@ -464,7 +502,10 @@ class TaskController extends BaseController
             $assigned_to_me = Task::where('assigned_to',Auth::guard('api')->user()->id)->where('assigned_by',$request->buddy_id);
 
             if($search && $search != '') {
-                $assigned_to_me = $assigned_to_me->where('title','like','%'.$search.'%');
+                $assigned_to_me = $assigned_to_me->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
             }
 
             if($status && $status != '') {
@@ -480,7 +521,7 @@ class TaskController extends BaseController
             {
                 if($from_date)
                 {
-                    $assigned_to_me = $assigned_to_me->whereDate('due_date', $from_date);
+                    $assigned_to_me = $assigned_to_me->whereDate('due_date','>=', $from_date);
                 }
             }
 
@@ -504,7 +545,7 @@ class TaskController extends BaseController
                     $que->whereIn('attachment_type',$type);
                 });
             }
-            $assigned_to_me = $assigned_to_me->paginate();
+            $assigned_to_me = $assigned_to_me->orderBy('due_date','desc')->paginate();
             if(count($assigned_to_me))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($assigned_to_me), trans('task.task_assigned_to_me'));
@@ -545,7 +586,10 @@ class TaskController extends BaseController
                                 ->where('assigned_to','=',$request->buddy_id);
 
             if($search && $search != '') {
-                $assigned_to_buddy = $assigned_to_buddy->where('title','like','%'.$search.'%');
+                $assigned_to_buddy = $assigned_to_buddy->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
             }
 
             if($status && $status != '') {
@@ -561,7 +605,7 @@ class TaskController extends BaseController
             {
                 if($from_date)
                 {
-                    $assigned_to_me = $assigned_to_me->whereDate('due_date', $from_date);
+                    $assigned_to_buddy = $assigned_to_buddy->whereDate('due_date','>=', $from_date);
                 }
             }
 
@@ -586,7 +630,7 @@ class TaskController extends BaseController
                 });
             }
 
-            $assigned_to_buddy = $assigned_to_buddy->paginate();
+            $assigned_to_buddy = $assigned_to_buddy->orderBy('due_date','desc')->paginate();
             if(count($assigned_to_buddy))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($assigned_to_buddy), trans('task.task_assigned_by_me'));
@@ -618,12 +662,22 @@ class TaskController extends BaseController
                                     ->where('status','pending');
 
             if($search && $search != '') {
-                $pending_requests = $pending_requests->where('title','like','%'.$search.'%');
+                $pending_requests = $pending_requests->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
             }
 
             if($from_date && $to_date)
             {
                 $pending_requests = $pending_requests->whereBetween('due_date', [$from_date, $to_date]);
+            }
+            else
+            {
+                if($from_date)
+                {
+                    $pending_requests = $pending_requests->whereDate('due_date','>=', $from_date);
+                }
             }
 
             if($attachment_type && $attachment_type != '')
@@ -653,7 +707,7 @@ class TaskController extends BaseController
                 $pending_requests = $pending_requests->whereIn('assigned_by',$buddy_ids);
             }
 
-            $pending_requests = $pending_requests->paginate();
+            $pending_requests = $pending_requests->orderBy('due_date','desc')->paginate();
             if(count($pending_requests))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($pending_requests), trans('task.pending_requests'));
@@ -687,12 +741,22 @@ class TaskController extends BaseController
                                     ->whereIn('status',['completed','rejected','trashed']);
 
             if($search && $search != '') {
-                $history = $history->where('title','like','%'.$search.'%');
+                $history = $history->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
             }
 
             if($from_date && $to_date)
             {
                 $history = $history->whereBetween('due_date', [$from_date, $to_date]);
+            }
+            else
+            {
+                if($from_date)
+                {
+                    $history = $history->whereDate('due_date','>=', $from_date);
+                }
             }
 
             if($attachment_type && $attachment_type != '')
@@ -727,7 +791,7 @@ class TaskController extends BaseController
                 $history = $history->whereIn('status',$status);
             }
 
-            $history = $history->paginate();
+            $history = $history->orderBy('due_date','desc')->paginate();
             if(count($history))
             {
                 return $this->sendPaginateResponse(TaskResource::collection($history), trans('task.history'));
@@ -759,12 +823,29 @@ class TaskController extends BaseController
             }
 
             $task = Task::find($request->task_id);
+
+            //check if task is already accepted
+            if($task->status == 'accepted')
+            {
+                return $this->sendResponse(new TaskResource($task), trans('task.task_accepted_already'));
+            }
+
             $task->status = 'accepted';
 
             if($task->save())
             {   
                 $status = 'Accepted';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
+
+                //Task Accepted Notification (From Buddy To Task Owner)
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_accepted_title');
+                $body     = trans('notify.task_accepted_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                $slug     = 'task_accepted';
+                $buddy_id = $task->assigned_to;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
                 return $this->sendResponse(new TaskResource($task), trans('task.task_accepted'));
             }
             else
@@ -794,18 +875,264 @@ class TaskController extends BaseController
             }
 
             $task = Task::find($request->task_id);
+
+            //check if task is already rejected
+            if($task->status == 'rejected')
+            {
+                return $this->sendResponse(new TaskResource($task), trans('task.task_rejected_already'));
+            }
+
             $task->status = 'rejected';
 
             if($task->save())
             {   
                 $status = 'Rejected';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
+
+                // Task Rejected Notification (From Buddy To Task Owner)
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_rejected_title');
+                $body     = trans('notify.task_rejected_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                $slug     = 'task_rejected';
+                $buddy_id = $task->assigned_to;
+
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
                 return $this->sendResponse(new TaskResource($task), trans('task.task_rejected'));
             }
             else
             {
                 return $this->sendResponse([],trans('task.task_update_error'));
             }
+        }catch(\Exception $e){
+            return $this->sendError('',$e->getMessage());           
+        }
+    }
+
+    /**
+     * Task Details.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function task_details(Request $request) {
+        try{
+            //VALIDATION ..
+            $validator=  Validator::make($request->all(),[
+                'task_id'         => 'required|numeric|exists:tasks,id',
+            ]);
+
+            if($validator->fails()) {
+                return $this->sendValidationError('', $validator->errors()->first());
+            }
+
+            $task = Task::find($request->task_id);
+
+            if($task)
+            {
+                return $this->sendResponse(new TaskResource($task), trans('task.task_details'));
+            }
+
+        }catch(\Exception $e){
+            return $this->sendError('',$e->getMessage());           
+        }
+    }
+
+    /**
+     *  Delayed Task by me.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function delayed_task_by_me(Request $request) {
+        try{
+            
+            $search          = @$request->search;
+            $status          = @$request->status;
+            $from_date       = @$request->from_date;
+            $to_date         = @$request->to_date;
+            $attachment_type = @$request->attachment_type;
+            $buddy_ids       = @$request->buddy_ids;
+
+            $delayed_by_me = Task::where('assigned_to',Auth::guard('api')->user()->id)
+                                ->where(DB::raw("CONCAT(due_date,' ',due_time)"),'<=',date('Y-m-d H:i:s'))
+                                ->where('status','accepted');
+
+            if($search && $search != '') {
+                $delayed_by_me = $delayed_by_me->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
+                                    
+            }
+
+            if($status && $status != '') {
+                $status = explode(',', $status);
+                $delayed_by_me = $delayed_by_me->whereIn('status',$status);
+            }
+
+            if($from_date && $to_date)
+            {
+                $delayed_by_me = $delayed_by_me->whereBetween('due_date', [$from_date, $to_date]);
+            }
+            else
+            {
+                if($from_date)
+                {
+                    $delayed_by_me = $delayed_by_me->whereDate('due_date','>=', $from_date);
+                }
+            }
+
+            if($attachment_type && $attachment_type != '')
+            {
+                $attachment_type = explode(',', $attachment_type);
+                $delayed_by_me = $delayed_by_me->whereHas('attachments',function($que) use($attachment_type){
+                    $type = [];
+                    if(in_array('image', $attachment_type))
+                    {
+                        $type[] = 'image';   
+                    }
+                    if(in_array('pdf', $attachment_type))
+                    {
+                        $type[] = 'application/pdf';
+                    }
+                    if(in_array('document', $attachment_type))
+                    {
+                        $type[] = 'text/plain';
+                    }
+                    $que->whereIn('attachment_type',$type);
+                });
+            }
+
+            if($buddy_ids)
+            {
+                $buddy_ids = explode(',', $buddy_ids);
+                $delayed_by_me = $delayed_by_me->whereIn('assigned_to',$buddy_ids);
+            }
+
+            $delayed_by_me = $delayed_by_me->orderBy('due_date','desc')->paginate();
+            if(count($delayed_by_me))
+            {
+                return $this->sendPaginateResponse(TaskResource::collection($delayed_by_me), trans('task.task_delayed_by_me'));
+            }
+            else
+            {
+                return $this->sendResponse([],trans('task.tasks_not_found'));
+            }
+        }catch(\Exception $e){
+            return $this->sendError('',$e->getMessage());           
+        }
+    }
+
+    /**
+     *  Delayed Task by buddy.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function delayed_task_by_buddy(Request $request) {
+        try{
+            
+            $search          = @$request->search;
+            $status          = @$request->status;
+            $from_date       = @$request->from_date;
+            $to_date         = @$request->to_date;
+            $attachment_type = @$request->attachment_type;
+            $buddy_ids       = @$request->buddy_ids;
+
+            $delayed_by_buddy = Task::where('assigned_by',Auth::guard('api')->user()->id)
+                                ->where('assigned_to','!=',Auth::guard('api')->user()->id)
+                                ->where(DB::raw("CONCAT(due_date,' ',due_time)"),'<=',date('Y-m-d H:i:s'))
+                                ->where('status','accepted');
+
+            if($search && $search != '') {
+                $delayed_by_buddy = $delayed_by_buddy->where(function($q) use($search){
+                                    $q->where('title','like','%'.$search.'%')
+                                    ->orWhere('description','like','%'.$search.'%');
+                                });
+                                    
+            }
+
+            if($status && $status != '') {
+                $status = explode(',', $status);
+                $delayed_by_buddy = $delayed_by_buddy->whereIn('status',$status);
+            }
+
+            if($from_date && $to_date)
+            {
+                $delayed_by_buddy = $delayed_by_buddy->whereBetween('due_date', [$from_date, $to_date]);
+            }
+            else
+            {
+                if($from_date)
+                {
+                    $delayed_by_buddy = $delayed_by_buddy->whereDate('due_date','>=', $from_date);
+                }
+            }
+
+            if($attachment_type && $attachment_type != '')
+            {
+                $attachment_type = explode(',', $attachment_type);
+                $delayed_by_buddy = $delayed_by_buddy->whereHas('attachments',function($que) use($attachment_type){
+                    $type = [];
+                    if(in_array('image', $attachment_type))
+                    {
+                        $type[] = 'image';   
+                    }
+                    if(in_array('pdf', $attachment_type))
+                    {
+                        $type[] = 'application/pdf';
+                    }
+                    if(in_array('document', $attachment_type))
+                    {
+                        $type[] = 'text/plain';
+                    }
+                    $que->whereIn('attachment_type',$type);
+                });
+            }
+
+            if($buddy_ids)
+            {
+                $buddy_ids = explode(',', $buddy_ids);
+                $delayed_by_buddy = $delayed_by_buddy->whereIn('assigned_to',$buddy_ids);
+            }
+
+            $delayed_by_buddy = $delayed_by_buddy->orderBy('due_date','desc')->paginate();
+            if(count($delayed_by_buddy))
+            {
+                return $this->sendPaginateResponse(TaskResource::collection($delayed_by_buddy), trans('task.task_delayed_by_buddy'));
+            }
+            else
+            {
+                return $this->sendResponse([],trans('task.tasks_not_found'));
+            }
+        }catch(\Exception $e){
+            return $this->sendError('',$e->getMessage());           
+        }
+    }
+
+    public function notify_buddy_for_delayed_task(Request $request) {
+        try{
+            $validator=  Validator::make($request->all(),[
+                'task_id'         => 'required|numeric|exists:tasks,id',
+            ]);
+            if($validator->fails()) {
+                return $this->sendValidationError('', $validator->errors()->first());
+            }
+
+            $task = Task::find($request->task_id);
+
+            // Task Delayed Notification (From Task Owner To Buddy)
+            $user     = User::where(['id' => $task->assigned_to])->first();
+            $title    = trans('notify.task_delayed_by_buddy_title');
+            $body     = trans('notify.task_delayed_by_buddy_body',['user'=> $task->assignedTo->first_name,'buddy_name' => $task->assignedby->first_name,'task' => $task->title]);
+            $slug     = 'task_delayed_by_buddy';
+            $buddy_id = $task->assigned_by;
+
+            $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+
+            return $this->sendResponse(new TaskResource($task), trans('task.notification_sent'));
+
         }catch(\Exception $e){
             return $this->sendError('',$e->getMessage());           
         }

@@ -17,7 +17,9 @@ return [
 'pending_requests' => 'Pending Requests',
 'history' => 'History',
 'task_accepted' => 'Congratulations! Your Task has accepted successfully.',
+'task_accepted_already' => 'Task has already been accepted.',
 'task_rejected' => 'Congratulations! Your Task has rejected successfully.',
+'task_rejected_already' => 'Task has already been rejected.',
 'task_update_error' => 'Something went wrong while updating task.',
 'task_dates_not_found' => 'Task dates not found.',
 'task_dates_not_found' => 'Task dates not found.',
@@ -31,6 +33,8 @@ return [
 'completed_time' => 'Completed Time',
 'rescheduled_at' => 'Rescheduled At',
 'title' => 'Task List',
-
-
+'task_details' => 'Task Details',
+'task_delayed_by_me' => 'Delayed task by me',
+'task_delayed_by_buddy' => 'Delayed task by buddy',
+'notification_sent' => 'Notifcation has been sent successfully'
 ];

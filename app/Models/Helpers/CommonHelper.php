@@ -80,7 +80,7 @@ trait CommonHelper
   /**
   * Send Notification
   */
-  public function sendNotification($user,$title,$body,$slug,$buddy_id){
+  public function sendNotification($user,$title,$body,$slug,$buddy_id=NULL,$task_id=NULL){
       
       if($user == null){
         return true;
@@ -93,6 +93,7 @@ trait CommonHelper
       $notify->content  = $body;
       $notify->slug     = $slug;
       $notify->buddy_id = $buddy_id;
+      $notify->task_id  = $task_id;
       $notify->save();
 
       //Check for user's device details
@@ -100,25 +101,53 @@ trait CommonHelper
       //Check if Device details available
       if(!empty($device)){
 
-          $fcm_server_key = '';
+          $fcm_server_key = 'AAAA9_G8WpA:APA91bERPSHejFW9j3G0oDUmQnhEyDegmQLbf8kPS8qsxT_yN7UEIDtuzRk7_gCyiORBz-BjcBOMH8M3RsIaXbKyaf8CUHkb8wwRUuxIh98rQtD7wDpHnl48XprGC60Zy2cdmBvca7iM';
 
-          $message = [ "notification" => [
+          $message = [ 
+            "to" => $device->device_token,
+            "notification" => [
                 "body" => $body,
-                "title" => $title
+                "title" => $title,
+                "sound" => "notification_tone.wav"
             ],
             "data" => [
+                'buddy_id' => $buddy_id,
+                'task_id' => $task_id,
+                'slug' => $slug,
                 "click_action" => "FLUTTER_NOTIFICATION_CLICK"
             ]
           ];
           
-          $push = new PushNotification('fcm');
+          /*$push = new PushNotification('fcm');
           $push->setMessage($message);
           $push = $push->setApiKey($fcm_server_key);
           
 
           $push  =  $push->setDevicesToken($device->device_token)
                          ->send()
-                         ->getFeedback();
+                         ->getFeedback();*/
+
+          $push_notification_key = $fcm_server_key;    
+          $url = "https://fcm.googleapis.com/fcm/send";            
+          $header = array("authorization: key=" . $push_notification_key . "",
+              "content-type: application/json"
+          );    
+
+          $postdata = json_encode($message);
+
+          $ch = curl_init();
+          $timeout = 120;
+          curl_setopt($ch, CURLOPT_URL, $url);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+          curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+          curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+          curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+
+          // Get URL content
+          $result = curl_exec($ch);    
+          // close handle to release resources
+          curl_close($ch);
 
           return true;
 

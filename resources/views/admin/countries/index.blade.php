@@ -24,9 +24,9 @@
         <div class="box">
           <div class="box-header">
             <h3 class="box-title">{{trans('countries.title')}}</h3>
-      <!--  @can('country-create')
+            {{--@can('country-create')--}}
             <h3 class="box-title pull-right"><a href="{{route('country.create')}}" class="btn btn-success pull-right">{{ trans('countries.add_new') }}</a></h3>
-            @endcan -->
+            {{--@endcan--}}
           </div>
           <div class="box-body">
             <table id="country" class="table table-bordered table-hover">
@@ -36,7 +36,7 @@
                   <th>{{trans('countries.country_name')}}</th>
                   <th>{{trans('countries.country_code')}}</th>
                   <th>{{trans('countries.flag')}}</th>
-                  <!-- <th>{{trans('common.status')}}</th> -->
+                  <th>{{trans('common.status')}}</th>
                   <th>{{trans('common.action')}}</th>
                 </tr>
               </thead>
@@ -47,7 +47,7 @@
                   <th>{{trans('countries.country_name')}}</th>
                   <th>{{trans('countries.country_code')}}</th>
                   <th>{{trans('countries.flag')}}</th>
-                  <!-- <th>{{trans('common.status')}}</th> -->
+                  <th>{{trans('common.status')}}</th>
                   <th>{{trans('common.action')}}</th>
                 </tr>
               </tfoot>
@@ -113,7 +113,7 @@
          { data: 'name',orderable:false},
          { data: 'country_code',orderable:false },
          { data: 'flag',orderable:false },
-         /*{ data: 'status',
+         { data: 'status',
             mRender : function(data, type, row) {
                   var status=data;
                   if(status=='1'){
@@ -123,12 +123,12 @@
                     data='selected';
                     type='';
                   }
-                 return '<select class="country_status form-control" id="'+row["id"]+'"><option value="active"'+type+'>{{trans("common.active")}}</option><option value="inactive"'+data+'>{{trans("common.inactive")}}</option></select><span class="loading" style="visibility: hidden;"><i class="fa fa-spinner fa-spin fa-1x fa-fw"></i><span class="sr-only">{{trans("common.loading")}}</span></span>';
+                 return '<select class="country_status form-control" id="'+row["id"]+'"><option value="1"'+type+'>{{trans("common.active")}}</option><option value="0"'+data+'>{{trans("common.inactive")}}</option></select><span class="loading" style="visibility: hidden;"><i class="fa fa-spinner fa-spin fa-1x fa-fw"></i><span class="sr-only">{{trans("common.loading")}}</span></span>';
               } 
-          },*/
+          },
           { 
             mRender : function(data, type, row) {
-                  return '<a class="btn" href="'+row["show"]+'"><i class="fa fa-eye"></i></a>';
+                  return '<a class="btn" href="'+row["edit"]+'"><i class="fa fa-edit"></i></a><a class="btn" href="'+row["show"]+'"><i class="fa fa-eye"></i></a><form action="'+row["delete"]+'" method="post"><button class="btn" type="submit" onclick=" return delete_alert()"><i class="fa fa-trash"></i></button>@method("delete")@csrf</form>';
               },orderable:false,
           },
         ]

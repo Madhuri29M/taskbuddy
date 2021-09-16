@@ -121,7 +121,6 @@ $routename = Route::currentRouteName();
         </li>
         @endcan
         
-        @can('category-list')
         <li class="treeview {{ $master_tree }}">
           <a href="#">
             <i class="fa fa-copy"></i> <span>{{ trans('sidebar.master_panel') }}</span>
@@ -153,8 +152,7 @@ $routename = Route::currentRouteName();
                 </a>
               </li> -->
           </ul>
-        </li>   
-        @endcan
+        </li>  
         @can('cms-list')
         <li class="treeview  {{ $cms_tree }}">
           <a href="#">

@@ -5,9 +5,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Country;
+use App\Models\Helpers\CommonHelper;
 
 class CountryController extends Controller
 {
+    use CommonHelper;
     /**
      * Display a listing of the resource.
      *
@@ -100,13 +102,14 @@ class CountryController extends Controller
     public function store(Request $request)
     {
         $this->validate($request,[
-            'name'          => 'required|regex:/^[\w\-\s]+$/u|max:30|unique:country,name',
-            'country_code'  => 'required|max:5|unique:country,country_code',
-            'status'        => 'required|in:0,1'
+            'name'         => 'required|regex:/^[\w\-\s]+$/u|max:30|unique:countries,name',
+            'country_code' => 'required|max:5|unique:countries,country_code',
+            'status'       => 'required|in:0,1',
+            'flag'         => 'required|image|mimes:png,jpg,jpeg,svg|max:10000'
         ]);
 
         $data = $request->all();
-       
+        $data['flag'] = $this->saveMedia($request->flag,'flag');
         if(Country::create($data)) {
 
             return redirect()->route('country.index')->with('success','Country saved successfully');
@@ -162,11 +165,15 @@ class CountryController extends Controller
         }
 
         $validator = $request->validate([
-            'name'          =>['required','regex:/^[\w\-\s]+$/u','max:30',Rule::unique('country','name')->ignore($country->id)],
-            'country_code'  => ['required','max:5',Rule::unique('country','country_code')->ignore($country->id)],
-            'status'        => 'required|in:0,1',
+            'name'         => ['required','regex:/^[\w\-\s]+$/u','max:30',Rule::unique('countries','name')->ignore($country->id)],
+            'country_code' => ['required','max:5',Rule::unique('countries','country_code')->ignore($country->id)],
+            'status'       => 'required|in:0,1',
+            'flag'         => 'image|mimes:png,jpg,jpeg,svg|max:10000'
         ]);
-
+        if($request->flag)
+        {
+            $data['flag'] = $this->saveMedia($request->flag,'flag');
+        }
         if($country->update($data)){
 
             return redirect()->route('country.index')->with('success','Country updated successfully');
@@ -195,5 +202,38 @@ class CountryController extends Controller
 
             return redirect()->route('country.index')->with('error',"Coudn't delete Country");
         }
+    }
+
+    /**
+    * Ajax for index page status dropdown.
+    *
+    * @param  int  $id
+    * @return \Illuminate\Http\Response
+    */
+    public function status(Request $request)
+    {
+      if($request->status == 'inactive'){
+        $vendorProfile  =   VendorProfile::whereNotNull('city_id')->get();
+
+        foreach ($vendorProfile as $profile ) {
+          $countries[]  = $profile->city->state->country->country_id;
+        }
+
+        if($countries){
+          foreach ($countries as $country_id) {
+              if($request->id == $country_id->id){
+               return response()->json(['success' => trans('countries.country_in_use')]);   
+              }
+          }
+        }
+       } 
+        $country= Country::where('id',$request->id)
+               ->update(['status'=>$request->status]);
+    
+       if($country){
+        return response()->json(['success' => trans('countries.county_status_update')]);
+       }else{
+        return response()->json(['error' => trans('countries.not_status_update')]);
+       }
     }
 }

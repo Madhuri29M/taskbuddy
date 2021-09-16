@@ -37,20 +37,20 @@
               @endcan
           </div>
           <div class="box-body">
-              {!! Form::open(['route' => 'country.store','method' => 'POST','id'=>'country']) !!}
+              {!! Form::open(['route' => 'country.store','method' => 'POST','id'=>'country','enctype' => 'multipart/form-data']) !!}
                   {{csrf_field()}}
                   <div class="modal-body">
                       <div class="row">
-                          <div class="col-md-4">
-                              <div class="form-group @error('country_name') ? has-error : ''  @enderror">
+                          <div class="col-md-6">
+                              <div class="form-group @error('name') ? has-error : ''  @enderror">
                                   {{Form::label('name',trans('countries.country_name'))}}
-                                  {!!Form::text('country_name', null,['class' => 'form-control','placeholder'=>trans('countries.country_name'),'required'=>'true'])!!}
-                                  @error('country_name')
+                                  {!!Form::text('name', null,['class' => 'form-control','placeholder'=>trans('countries.country_name'),'required'=>'true'])!!}
+                                  @error('name')
                                       <div class="help-block">{{ $message }}</div>
                                   @enderror
                               </div>
                           </div>
-                          <div class="col-md-4">
+                          <div class="col-md-6">
                               <div class="form-group @error('country_code') ? has-error : ''  @enderror">
                                   {{Form::label('code',trans('countries.country_code'))}}
                                   {!!Form::text('country_code', null,['class' => 'form-control','placeholder'=>trans('countries.country_code'),'required'=>'true'])!!}
@@ -59,21 +59,24 @@
                                   @enderror
                               </div>
                           </div>
-                          <div class="col-md-4">
-                              <div class="form-group @error('sort_name') ? has-error : ''  @enderror">
-                                  {{Form::label('sort_name',trans('countries.sort_name'))}}
-                                  {!!Form::text('sort_name', null,['class' => 'form-control','placeholder'=>trans('countries.sort_name'),'required'=>'true'])!!}
-                                  @error('sort_name')
-                                      <div class="help-block">{{ $message }}</div>
-                                  @enderror
-                              </div>
-                          </div>
+                          
                       </div>
                       <div class="row">
-                          <div class="col-md-4">
+                          <div class="col-md-6">
+                            <div class="form-group @error('flag') ? has-error : ''  @enderror">
+                              {{Form::label('flag',trans('countries.flag'))}}
+                              <input type="file" name="flag" accept="image/*">
+                              <strong class="help-block">
+                                {{ 
+                                  @$errors->first('flag') 
+                                }}
+                              </strong>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
                               <div class="form-group @error('status') ? has-error : ''  @enderror">
                                   {{Form::label('status', trans('common.status'))}}
-                                  {!! Form::select('status', ['active' => 'Active','inactive' => 'Inactive'],null , ['class' => 'form-control']) !!}
+                                  {!! Form::select('status', ['1' => 'Active','0' => 'Inactive'],null , ['class' => 'form-control']) !!}
                                   @error('status')
                                       <div class="help-block">{{ $message }}</div>
                                   @enderror

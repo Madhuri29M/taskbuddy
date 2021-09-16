@@ -82,7 +82,7 @@
                                     @enderror
                                 </div>
                             </div> -->
-                            <div class="col-md-4">
+                            <!-- <div class="col-md-4">
                                 <div class="form-group">
                                     {{Form::label('old_password',trans('panel.old_password'))}}
                                     {!!Form::password('old_password',['class' => 'form-control','placeholder'=>trans('panel.old_password')])!!}
@@ -107,7 +107,7 @@
                                         <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <label>{{ trans('panel.profile_pic') }}</label> 
                         <div class="row">

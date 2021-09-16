@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
             RolesTableSeeder::class,
             SettingsTableSeeder::class,
             CmsSeeder::class,
-            // UsersTableSeeder::class,
-            // CountrySeeder::class,
+            UsersTableSeeder::class,
+            CountrySeeder::class,
         ]);
     }
 }

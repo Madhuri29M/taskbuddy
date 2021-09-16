@@ -119,6 +119,8 @@ class AuthController extends BaseController
             'device_token'  => 'nullable',
             'device_type'   => 'nullable',
             // 'firebase_token' => 'required|exists:users',
+        ],[
+            'mobile_number.exists' => 'This mobile number is not registered with us. Please register first.'
         ]);
         if($validator->fails()) {
             return $this->sendError($this->object, $validator->errors()->first());       

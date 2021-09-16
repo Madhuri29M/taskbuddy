@@ -243,7 +243,7 @@ class HomeController extends BaseController
         }
 
         //send notification for delay task list only if It's 8 PM
-        if(date('H:00') == '20:00')
+        if(date('H:i') == '20:00')
         {
             // All Delayed Tasks
             $delayedTasks = Task::where(DB::raw("CONCAT(due_date,' ',due_time)"),'<=',date('Y-m-d H:i:s'))->where('status','accepted')->get();

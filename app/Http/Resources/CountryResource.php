@@ -19,7 +19,7 @@ class CountryResource extends JsonResource
             'id'   => $this->id ? (string)$this->id : '' ,
             'name' => $this->name ? (string)$this->name : '' ,
             'code' => $this->country_code ? (string)$this->country_code : '' ,
-            'flag' => asset($this->flag)
+            'flag' => $this->flag
         ];
     }
 }

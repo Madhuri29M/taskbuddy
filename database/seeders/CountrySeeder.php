@@ -14,13 +14,17 @@ class CountrySeeder extends Seeder
     public function run()
     {
 
-       	Country::updateOrCreate(
-            ['country_code' => '+91',
-             'name' => 'India',
-             'flag' => 'flags/india.png',
-             'status' => '1',
-            ]
-        );
+       	$countries = json_decode(file_get_contents(__DIR__ . '/data/countries.json'), true);
+        // echo "<pre>";print_r($countries);exit;
+        foreach ($countries as $countryId => $country){
+            $createArray = [];
+            $createArray['name']         = $country['name'];
+            $createArray['country_code'] = '+'.$country['calling_code'];
+            $createArray['flag']         = "https://www.countryflags.io/".$country['iso_3166_2']."/flat/64.png";
+            $createArray['status']       = '0';
+
+            Country::create($createArray);
+        }
 	}
 
 }

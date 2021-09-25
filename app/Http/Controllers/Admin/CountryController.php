@@ -64,7 +64,7 @@ class CountryController extends Controller
             $emp['edit']        = route("country.edit",$emp["id"]);
             $emp['show']        = route("country.show",$emp["id"]);
             $emp['delete']      = route("country.destroy",$emp["id"]);
-            $emp['flag']      = "<img src='".asset($emp['flag'])."' style='width:30px'>";
+            $emp['flag']      = "<img src='".$emp['flag']."' style='width:30px'>";
 
             $data[]             = $emp;
              $i++;

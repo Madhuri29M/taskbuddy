@@ -304,7 +304,7 @@ class BuddyController extends BaseController
                 
             }
 
-            $buddies = $buddies->paginate();
+            $buddies = $buddies->paginate(20);
 
             if(count($buddies))
             {

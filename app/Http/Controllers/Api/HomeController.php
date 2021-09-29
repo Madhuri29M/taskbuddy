@@ -195,14 +195,17 @@ class HomeController extends BaseController
         $tenMinsDue = date('H:i:00', $ten_minutes);
         $dueTasks = Task::where('due_date',date('Y-m-d'))->where('due_time',$tenMinsDue)->whereIn('status',['accepted','pending'])->get();
         foreach ($dueTasks as $task) {
-            $user     = User::where(['id' => $task->assigned_to])->first();
-            $title    = trans('notify.task_reminder_title');
-            $body     = trans('notify.task_reminder_body',['task' => $task->title]);
-            $slug     = 'task_reminder';
-            $buddy_id = $task->assigned_by;
+            if($task->assigned_to != $task->assigned_by)
+            {
+                $user     = User::where(['id' => $task->assigned_to])->first();
+                $title    = trans('notify.task_reminder_title');
+                $body     = trans('notify.task_reminder_body',['task' => $task->title]);
+                $slug     = 'task_reminder';
+                $buddy_id = $task->assigned_by;
 
-            $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
-            \Log::info($body);
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                \Log::info($body);
+            }
         }
 
         // Task Didn't Accept Notification (From Buddy To Task Owner - After 2 Hours, 6 Hours, 24 Hours, Assigning to Buddy)
@@ -218,13 +221,16 @@ class HomeController extends BaseController
         ->where('status','pending')->get();
 
         foreach ($taskNotAccept2Hrs as $task) {
-            $user     = User::where(['id' => $task->assigned_by])->first();
-            $title    = trans('notify.task_not_accepted_title');
-            $body     = trans('notify.task_not_accepted_body',['user'=>$user->first_name,'buddy_name'=>$task->assignedTo->first_name, 'task' => $task->title]);
-            $slug     = 'task_not_accepted';
-            $buddy_id = $task->assigned_to;
-            $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
-            \Log::info($body);
+            if($task->assigned_to != $task->assigned_by)
+            {
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_not_accepted_title');
+                $body     = trans('notify.task_not_accepted_body',['user'=>$user->first_name,'buddy_name'=>$task->assignedTo->first_name, 'task' => $task->title]);
+                $slug     = 'task_not_accepted';
+                $buddy_id = $task->assigned_to;
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                \Log::info($body);
+            }
         }
 
         // Task Didn't Complete Notification (From Buddy To Task Owner - After 4 hours of task time) 
@@ -233,13 +239,16 @@ class HomeController extends BaseController
         $taskNotCompleted = Task::where('due_date',date('Y-m-d'))->where('due_time',$four_hrs_delay)->where('status','accepted')->whereNull('completed_date')->get();
 
         foreach ($taskNotCompleted as $task) {
-            $user     = User::where(['id' => $task->assigned_by])->first();
-            $title    = trans('notify.task_not_completed_title');
-            $body     = trans('notify.task_not_completed_body',['user'=>$user->first_name,'buddy_name'=>$task->assignedTo->first_name, 'task' => $task->title]);
-            $slug     = 'task_not_completed';
-            $buddy_id = $task->assigned_to;
-            $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
-            \Log::info($body);
+            if($task->assigned_to != $task->assigned_by)
+            {
+                $user     = User::where(['id' => $task->assigned_by])->first();
+                $title    = trans('notify.task_not_completed_title');
+                $body     = trans('notify.task_not_completed_body',['user'=>$user->first_name,'buddy_name'=>$task->assignedTo->first_name, 'task' => $task->title]);
+                $slug     = 'task_not_completed';
+                $buddy_id = $task->assigned_to;
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                \Log::info($body);
+            }
         }
 
         //send notification for delay task list only if It's 8 PM
@@ -255,29 +264,35 @@ class HomeController extends BaseController
                 if(!in_array($task->assigned_by, $delayByBuddiesSentIds))
                 {
                     // Task Delayed by Buddies Notification (When tasks are accepted but not completed within the same day, System will send the notification around 08:00 PM)
-                    $user     = User::where(['id' => $task->assigned_by])->first();
-                    $title    = trans('notify.task_delayed_by_buddies_title');
-                    $body     = trans('notify.task_delayed_by_buddies_body',['user'=>$user->first_name]);
-                    $slug     = 'task_delayed_by_buddies';
-                    $buddy_id = $task->assigned_to;
-                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
-                    \Log::info($body);
+                    if($task->assigned_to != $task->assigned_by)
+                    {
+                        $user     = User::where(['id' => $task->assigned_by])->first();
+                        $title    = trans('notify.task_delayed_by_buddies_title');
+                        $body     = trans('notify.task_delayed_by_buddies_body',['user'=>$user->first_name]);
+                        $slug     = 'task_delayed_by_buddies';
+                        $buddy_id = $task->assigned_to;
+                        $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                        \Log::info($body);
 
-                    $delayByBuddiesSentIds[] = $task->assigned_by;
+                        $delayByBuddiesSentIds[] = $task->assigned_by;
+                    }
                 }
 
                 if(!in_array($task->assigned_to, $delayByMeSentIds))
                 {
-                    // Task Delayed By Me notification (When Task is accepted but not completed)
-                    $user     = User::where(['id' => $task->assigned_to])->first();
-                    $title    = trans('notify.task_delayed_by_me_title');
-                    $body     = trans('notify.task_delayed_by_me_body',['buddy_name'=>$task->assignedTo->first_name]);
-                    $slug     = 'task_delayed_by_me';
-                    $buddy_id = $task->assigned_by;
-                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
-                    \Log::info($body);
+                    if($task->assigned_to != $task->assigned_by)
+                    {
+                        // Task Delayed By Me notification (When Task is accepted but not completed)
+                        $user     = User::where(['id' => $task->assigned_to])->first();
+                        $title    = trans('notify.task_delayed_by_me_title');
+                        $body     = trans('notify.task_delayed_by_me_body',['buddy_name'=>$task->assignedTo->first_name]);
+                        $slug     = 'task_delayed_by_me';
+                        $buddy_id = $task->assigned_by;
+                        $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                        \Log::info($body);
 
-                    $delayByMeSentIds[] = $task->assigned_to;
+                        $delayByMeSentIds[] = $task->assigned_to;
+                    }
                 }
                 
             }

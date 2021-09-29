@@ -93,14 +93,18 @@ class TaskController extends BaseController
                 //update task history
                 $status = 'Created';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
-                //notify buddy for new task
-                $user     = User::where(['id' => $request->assign_to])->first();
-                $title    = trans('notify.task_request_title');
-                $body     = trans('notify.task_request_body',['buddy_name' => Auth::guard('api')->user()->first_name]);
-                $slug     = 'task_request';
-                $buddy_id = Auth::guard('api')->user()->id;
+                if($request->assigned_to != Auth::guard('api')->user()->id)
+                {
+                    //notify buddy for new task
+                    $user     = User::where(['id' => $request->assign_to])->first();
+                    $title    = trans('notify.task_request_title');
+                    $body     = trans('notify.task_request_body',['buddy_name' => Auth::guard('api')->user()->first_name]);
+                    $slug     = 'task_request';
+                    $buddy_id = Auth::guard('api')->user()->id;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
+                
                 DB::commit();
                 return $this->sendResponse('', trans('task.task_created'));
             }else{
@@ -167,14 +171,17 @@ class TaskController extends BaseController
                 $status = 'Trashed';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
 
-                // Move to trash Notification (From Buddy To Task Owner)
-                $user     = User::where(['id' => $task->assigned_by])->first();
-                $title    = trans('notify.task_trashed_title');
-                $body     = trans('notify.task_trashed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
-                $slug     = 'task_trashed';
-                $buddy_id = $task->assigned_to;
+                if($task->assigned_to != $task->assigned_by)
+                {
+                    // Move to trash Notification (From Buddy To Task Owner)
+                    $user     = User::where(['id' => $task->assigned_by])->first();
+                    $title    = trans('notify.task_trashed_title');
+                    $body     = trans('notify.task_trashed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                    $slug     = 'task_trashed';
+                    $buddy_id = $task->assigned_to;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
 
                 return $this->sendResponse(new TaskResource($task), trans('task.task_moved_to_trash'));
             }
@@ -214,14 +221,17 @@ class TaskController extends BaseController
                 $status = 'Completed';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
 
-                // Task Completed Notification (From Buddy To Task Owner)
-                $user     = User::where(['id' => $task->assigned_by])->first();
-                $title    = trans('notify.task_completed_title');
-                $body     = trans('notify.task_completed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
-                $slug     = 'task_completed';
-                $buddy_id = $task->assigned_to;
+                if($task->assigned_to != $task->assigned_by)
+                {
+                    // Task Completed Notification (From Buddy To Task Owner)
+                    $user     = User::where(['id' => $task->assigned_by])->first();
+                    $title    = trans('notify.task_completed_title');
+                    $body     = trans('notify.task_completed_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                    $slug     = 'task_completed';
+                    $buddy_id = $task->assigned_to;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
 
                 return $this->sendResponse(new TaskResource($task), trans('task.marked_as_done'));
             }
@@ -268,14 +278,16 @@ class TaskController extends BaseController
                 $status = 'Rescheduled';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
 
-                // Task Reschedule Notification (From Buddy To Task Owner)
-                $user     = User::where(['id' => $task->assigned_by])->first();
-                $title    = trans('notify.task_rescheduled_title');
-                $body     = trans('notify.task_rescheduled_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
-                $slug     = 'task_rescheduled';
-                $buddy_id = $task->assigned_to;
+                if($task->assigned_to != $task->assigned_by)
+                    // Task Reschedule Notification (From Buddy To Task Owner)
+                    $user     = User::where(['id' => $task->assigned_by])->first();
+                    $title    = trans('notify.task_rescheduled_title');
+                    $body     = trans('notify.task_rescheduled_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                    $slug     = 'task_rescheduled';
+                    $buddy_id = $task->assigned_to;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
 
                 return $this->sendResponse(new TaskResource($task), trans('task.task_rescheduled'));
             }
@@ -837,14 +849,17 @@ class TaskController extends BaseController
                 $status = 'Accepted';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
 
-                //Task Accepted Notification (From Buddy To Task Owner)
-                $user     = User::where(['id' => $task->assigned_by])->first();
-                $title    = trans('notify.task_accepted_title');
-                $body     = trans('notify.task_accepted_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
-                $slug     = 'task_accepted';
-                $buddy_id = $task->assigned_to;
+                if($task->assigned_to != $task->assigned_by)
+                {
+                    //Task Accepted Notification (From Buddy To Task Owner)
+                    $user     = User::where(['id' => $task->assigned_by])->first();
+                    $title    = trans('notify.task_accepted_title');
+                    $body     = trans('notify.task_accepted_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                    $slug     = 'task_accepted';
+                    $buddy_id = $task->assigned_to;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
 
                 return $this->sendResponse(new TaskResource($task), trans('task.task_accepted'));
             }
@@ -889,14 +904,17 @@ class TaskController extends BaseController
                 $status = 'Rejected';
                 $this->update_task_history($task->id,$status,Auth::guard('api')->user()->id);
 
-                // Task Rejected Notification (From Buddy To Task Owner)
-                $user     = User::where(['id' => $task->assigned_by])->first();
-                $title    = trans('notify.task_rejected_title');
-                $body     = trans('notify.task_rejected_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
-                $slug     = 'task_rejected';
-                $buddy_id = $task->assigned_to;
+                if($task->assigned_to != $task->assigned_by)
+                {
+                    // Task Rejected Notification (From Buddy To Task Owner)
+                    $user     = User::where(['id' => $task->assigned_by])->first();
+                    $title    = trans('notify.task_rejected_title');
+                    $body     = trans('notify.task_rejected_body',['user'=> $task->assignedBy->first_name,'buddy_name' => $task->assignedTo->first_name,'task' => $task->title]);
+                    $slug     = 'task_rejected';
+                    $buddy_id = $task->assigned_to;
 
-                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                    $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                }
 
                 return $this->sendResponse(new TaskResource($task), trans('task.task_rejected'));
             }
@@ -1121,15 +1139,17 @@ class TaskController extends BaseController
             }
 
             $task = Task::find($request->task_id);
+            if($task->assigned_to != $task->assigned_by)
+            {
+                // Task Delayed Notification (From Task Owner To Buddy)
+                $user     = User::where(['id' => $task->assigned_to])->first();
+                $title    = trans('notify.task_delayed_by_buddy_title');
+                $body     = trans('notify.task_delayed_by_buddy_body',['user'=> $task->assignedTo->first_name,'buddy_name' => $task->assignedby->first_name,'task' => $task->title]);
+                $slug     = 'task_delayed_by_buddy';
+                $buddy_id = $task->assigned_by;
 
-            // Task Delayed Notification (From Task Owner To Buddy)
-            $user     = User::where(['id' => $task->assigned_to])->first();
-            $title    = trans('notify.task_delayed_by_buddy_title');
-            $body     = trans('notify.task_delayed_by_buddy_body',['user'=> $task->assignedTo->first_name,'buddy_name' => $task->assignedby->first_name,'task' => $task->title]);
-            $slug     = 'task_delayed_by_buddy';
-            $buddy_id = $task->assigned_by;
-
-            $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+                $this->sendNotification($user,$title,$body,$slug,$buddy_id,$task->id);
+            }
 
             return $this->sendResponse(new TaskResource($task), trans('task.notification_sent'));
 

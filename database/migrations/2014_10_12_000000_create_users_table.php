@@ -23,7 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->string('designation')->nullable();
             $table->string('company_name')->nullable();
-            $table->string('bio')->nullable();
+            $table->longtext('bio')->nullable();
             $table->string('user_type');
             $table->string('profile_image')->nullable();
             $table->string('social_id',255)->nullable();
